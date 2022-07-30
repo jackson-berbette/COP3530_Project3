@@ -60,6 +60,7 @@ void minHeap::insertNode(Node* node) {
     // if the node won't fit, print error message
     if (size == capacity) {
         cout << "error: need bigger capacity" << endl;
+        return;
     }
 
     // increment size and set array index equal to node
@@ -81,28 +82,6 @@ void minHeap::updateUserReviews(vector<pair<int, pair<string, float>>> vec) {
     reviewsByUser = vec;
 }
 
-//void minHeap::heapify(int root) {
-//    int leftChild = getLeftChild(root);
-//    int rightChild = getRightChild(root);
-//
-//    int smallest = root;
-//
-//    if (leftChild < size && array[leftChild].name < array[smallest].name) {
-//        smallest = leftChild;
-//    }
-//    if (rightChild < size && array[rightChild].name < array[smallest].name) {
-//        smallest = rightChild;
-//    }
-//
-//    if (smallest != root) {
-//        cout << "heyyyy" << endl;
-//        Node temp = array[root];
-//        array[root] = array[smallest];
-//        array[smallest] = temp;
-//        heapify(smallest);
-//    }
-//}
-
 // function to get movie recommendations from user reviews
 void minHeap::goodMovieReview(string movie) {
 
@@ -112,7 +91,7 @@ void minHeap::goodMovieReview(string movie) {
     // find the index of movie from user input
     int index = -1;
     for (unsigned int i = 0; i < size; i++) {
-        if (array[i].name.find(movie) != string::npos) {
+        if (array[i].name == movie) {
             index = i;
             break;
         }
@@ -235,7 +214,7 @@ void minHeap::badMovieReview(string movie) {
     // find the index of the movie from user input
     int index = -1;
     for (unsigned int i = 0; i < size; i++) {
-        if (array[i].name.find(movie) != string::npos) {
+        if (array[i].name == movie) {
             index = i;
             break;
         }
@@ -422,7 +401,7 @@ void minHeap::goodMovieGenre(string movie) {
     // find the index of the user input movie
     int index = -1;
     for (unsigned int i = 0; i < size; i++) {
-        if (array[i].name.find(movie) != string::npos) {
+        if (array[i].name == movie) {
             index = i;
             break;
         }
@@ -471,7 +450,7 @@ void minHeap::goodMovieGenre(string movie) {
     // otherwise, print the 10 highest reviewed movies
     else {
         for (unsigned int i = 0; i < 10; i++) {
-            cout << average.at(i).second << endl;
+            cout << average.at(i).second << " " << average.at(i).first << endl;
         }
     }
 
@@ -492,7 +471,7 @@ void minHeap::badMovieGenre(string movie) {
     // search for the user input movie in the heap
     int index = -1;
     for (unsigned int i = 0; i < size; i++) {
-        if (array[i].name.find(movie) != string::npos) {
+        if (array[i].name == movie) {
             index = i;
             break;
         }
@@ -541,7 +520,7 @@ void minHeap::badMovieGenre(string movie) {
     // otherwise, print the 10 lowest rated movies
     else {
         for (unsigned int i = 0; i < 10; i++) {
-            cout << average.at(i).second << endl;
+            cout << average.at(i).second << " " << average.at(i).first << endl;
         }
     }
 
@@ -559,6 +538,12 @@ void minHeap::bestGenre(string genre) {
     // start the timer for function
     auto start = chrono::high_resolution_clock::now();
 
+//    vector<string> validGenres = {"Action", "Adventure", "Animation", "Children",
+//                                  "Comedy", "Crime", "Drama", "Fantasy", "Horror",
+//                                  "Thriller", "Mystery", "Sci-Fi", "Thriller",
+//                                  "IMAX", "Documentary", "Musical", "Romance",
+//                                  "War", "Western", "Film-Noir"};
+
     // create a vector to store indices of all movies with desired genre
     vector<int> indices;
 
@@ -567,11 +552,17 @@ void minHeap::bestGenre(string genre) {
         // for all of the genres listed for the current movie
         for (unsigned int j = 0; j < array[i].genres.size(); j++) {
             // if one of its genres matched the desired genre, push its index into the vector
-            if (array[i].genres.at(j).find(genre) != string::npos) {
+            if (array[i].genres.at(j) == genre) {
                 indices.push_back(i);
                 break;
             }
         }
+    }
+
+    // if the genre was not found, print error message
+    if (indices.size() == 0) {
+        cout << "Invalid Genre!" << endl;
+        return;
     }
 
     // get the average reviews for each movie in the vector
@@ -590,7 +581,7 @@ void minHeap::bestGenre(string genre) {
     // otherwise, print the top 10 rated movies
     else {
         for (unsigned int i = 0; i < 10; i++) {
-            cout << average.at(i).second << endl;
+            cout << average.at(i).second << " " << average.at(i).first << endl;
         }
     }
 
@@ -616,11 +607,17 @@ void minHeap::worstGenre(string genre) {
         // for every genre of the current movie
         for (unsigned int j = 0; j < array[i].genres.size(); j++) {
             // if one of the genres is the desired genre, push that movie's index into the vector
-            if (array[i].genres.at(j).find(genre) != string::npos) {
+            if (array[i].genres.at(j) == genre) {
                 indices.push_back(i);
                 break;
             }
         }
+    }
+
+    // if the genre was not found, print error message
+    if (indices.size() == 0) {
+        cout << "Invalid Genre!" << endl;
+        return;
     }
 
     // get the average review for each movie in the above vector
@@ -639,7 +636,7 @@ void minHeap::worstGenre(string genre) {
     // otherwise, print the top 10 lowest rated movies
     else {
         for (unsigned int i = 0; i < 10; i++) {
-            cout << average.at(i).second << endl;
+            cout << average.at(i).second << " " << average.at(i).first << endl;
         }
     }
 
@@ -776,25 +773,25 @@ int main() {
 //    heap.printHeap();
 
 //    heap.printInOrder(0);
-    heap.goodMovieReview("Interstellar");
+//    heap.goodMovieReview("Interstellar");
+//    cout << endl;
+//    heap.badMovieReview("Interstellar");
+//    cout << endl;
+//
+//    heap.goodMovieGenre("Toy Story (1995)");
+//    cout << endl;
+//    heap.badMovieGenre("Toy Storeeee");
+//    cout << endl;
+//
+//    heap.topOverall();
+//    cout << endl;
+//    heap.worstOverall();
+//    cout << endl;
+//
+    heap.bestGenre("EEE");
     cout << endl;
-    heap.badMovieReview("Interstellar");
-    cout << endl;
-
-    heap.goodMovieGenre("Interstellar");
-    cout << endl;
-    heap.badMovieGenre("Interstellar");
-    cout << endl;
-
-    heap.topOverall();
-    cout << endl;
-    heap.worstOverall();
-    cout << endl;
-
-    heap.bestGenre("Action");
-    cout << endl;
-    heap.worstGenre("Action");
-    cout << endl;
+//    heap.worstGenre("Comedy");
+//    cout << endl;
     return 0;
 }
 
