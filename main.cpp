@@ -4,6 +4,7 @@
 #include <fstream>
 #include <map>
 #include <chrono>
+#include <cmath>
 
 using namespace std;
 
@@ -154,7 +155,7 @@ void minHeap::goodMovieReview(string movie) {
         averageReviewsTemp[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
     }
 
-    map <float, string> averageReviews;
+    map <float, string, greater<>> averageReviews;
 
     map<string, vector<float>>::iterator iterTemp;
 
@@ -170,17 +171,20 @@ void minHeap::goodMovieReview(string movie) {
     }
 
     // iterate through this final map and find the movie titles associated with each review, and print the top 10
-    map<float, string>::iterator iter = averageReviews.begin();
+    map<float, string, greater<>>::iterator iter = averageReviews.begin();
 
     // if there are less than 10 movies, print them all out
     if (averageReviews.size() < 10) {
+        int i = 0;
         for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++) {
             for (unsigned int w = 0; w < size; w++) {
                 if (array[w].id == (*iter).second) {
-                    cout << array[w].name << endl;
+                    float rating = round((*iter).first * 10.0) / 10.0;
+                    cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
                     break;
                 }
             }
+            i++;
         }
     }
 
@@ -189,7 +193,8 @@ void minHeap::goodMovieReview(string movie) {
         for (unsigned int i = 0; i < 10; i++) {
             for (unsigned int w = 0; w < size; w++) {
                 if (array[w].id == (*iter).second) {
-                    cout << array[w].name << endl;
+                    float rating = round((*iter).first * 10.0) / 10.0;
+                    cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
                     break;
                 }
             }
@@ -296,13 +301,16 @@ void minHeap::badMovieReview(string movie) {
 
     // if the number of movies is less than 10, print them all
     if (averageReviews.size() < 10) {
+        int i = 0;
         for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++) {
             for (unsigned int w = 0; w < size; w++) {
                 if (array[w].id == (*iter).second) {
-                    cout << array[w].name << endl;
+                    float rating = round((*iter).first * 10.0) / 10.0;
+                    cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
                     break;
                 }
             }
+            i++;
         }
     }
 
@@ -311,7 +319,8 @@ void minHeap::badMovieReview(string movie) {
         for (unsigned int i = 0; i < 10; i++) {
             for (unsigned int w = 0; w < size; w++) {
                 if (array[w].id == (*iter).second) {
-                    cout << array[w].name << endl;
+                    float rating = round((*iter).first * 10.0) / 10.0;
+                    cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
                 }
             }
             iter++;
@@ -443,14 +452,16 @@ void minHeap::goodMovieGenre(string movie) {
     // if there are less than 10 movies, print them all
     if (average.size() < 10) {
         for (unsigned int i = 0; i < average.size(); i++) {
-            cout << average.at(i).second << endl;
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
         }
     }
 
     // otherwise, print the 10 highest reviewed movies
     else {
         for (unsigned int i = 0; i < 10; i++) {
-            cout << average.at(i).second << " " << average.at(i).first << endl;
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
         }
     }
 
@@ -513,14 +524,16 @@ void minHeap::badMovieGenre(string movie) {
     // if there are less than 10 movies, print them all
     if (average.size() < 10) {
         for (unsigned int i = 0; i < average.size(); i++) {
-            cout << average.at(i).second << endl;
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
         }
     }
 
     // otherwise, print the 10 lowest rated movies
     else {
         for (unsigned int i = 0; i < 10; i++) {
-            cout << average.at(i).second << " " << average.at(i).first << endl;
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
         }
     }
 
@@ -574,14 +587,16 @@ void minHeap::bestGenre(string genre) {
     // if the number of movies is less than 10, print them all
     if (average.size() < 10) {
         for (unsigned int i = 0; i < average.size(); i++) {
-            cout << average.at(i).second << endl;
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
         }
     }
 
     // otherwise, print the top 10 rated movies
     else {
         for (unsigned int i = 0; i < 10; i++) {
-            cout << average.at(i).second << " " << average.at(i).first << endl;
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
         }
     }
 
@@ -629,14 +644,16 @@ void minHeap::worstGenre(string genre) {
     // if there are less than 10 movies in the vector, print them all
     if (average.size() < 10) {
         for (unsigned int i = 0; i < average.size(); i++) {
-            cout << average.at(i).second << endl;
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
         }
     }
 
     // otherwise, print the top 10 lowest rated movies
     else {
         for (unsigned int i = 0; i < 10; i++) {
-            cout << average.at(i).second << " " << average.at(i).first << endl;
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
         }
     }
 
@@ -663,7 +680,8 @@ void minHeap::topOverall() {
 
     // print the top 10 movies
     for (unsigned int i = 0; i < 10; i++) {
-        cout << average.at(i).second << endl;
+        float rating = round(average.at(i).first * 10.0) / 10.0;
+        cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
     }
 
     // stop the timer and print the duration
@@ -688,7 +706,8 @@ void minHeap::worstOverall() {
 
     // print the 10 lowest rated movies
     for (unsigned int i = 0; i < 10; i++) {
-        cout << average.at(i).second << endl;
+        float rating = round(average.at(i).first * 10.0) / 10.0;
+        cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
     }
 
     // stop the timer and print the duration of the function
@@ -738,15 +757,19 @@ int main() {
         Node* temp = new Node;
         getline(movieFile, temp->id, ',');
 
+
         getline(movieFile, temp->name, ',');
         string tempName = "";
         if (temp->name.at(0) == '\"') {
+            temp->name += ",";
             while (temp->name.at(temp->name.size() - 1) != '\"' && temp->name.find(')') == string::npos) {
                 getline(movieFile, tempName, ',');
                 temp->name += tempName;
             }
             temp->name = temp->name.substr(1, temp->name.size() - 2);
+//            cout << temp->name << endl;
         }
+
 
         temporary = "";
         getline(movieFile,temporary);
@@ -773,25 +796,25 @@ int main() {
 //    heap.printHeap();
 
 //    heap.printInOrder(0);
-//    heap.goodMovieReview("Interstellar");
-//    cout << endl;
-//    heap.badMovieReview("Interstellar");
-//    cout << endl;
-//
-//    heap.goodMovieGenre("Toy Story (1995)");
-//    cout << endl;
-//    heap.badMovieGenre("Toy Storeeee");
-//    cout << endl;
-//
-//    heap.topOverall();
-//    cout << endl;
-//    heap.worstOverall();
-//    cout << endl;
-//
-    heap.bestGenre("EEE");
+    heap.goodMovieReview("Toy Story (1995)");
     cout << endl;
-//    heap.worstGenre("Comedy");
-//    cout << endl;
+    heap.badMovieReview("Toy Story (1995)");
+    cout << endl;
+
+    heap.goodMovieGenre("Toy Story (1995)");
+    cout << endl;
+    heap.badMovieGenre("Toy Story (1995)");
+    cout << endl;
+
+    heap.topOverall();
+    cout << endl;
+    heap.worstOverall();
+    cout << endl;
+
+    heap.bestGenre("Comedy");
+    cout << endl;
+    heap.worstGenre("Comedy");
+    cout << endl;
     return 0;
 }
 
