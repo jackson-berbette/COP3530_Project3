@@ -1,820 +1,660 @@
 #include <iostream>
 #include <utility>
 #include <vector>
-#include <fstream>
 #include <map>
-#include <chrono>
-#include <cmath>
+#include <iomanip>
+#include <set>
+#include <string>
+#include <sstream>
+#include <fstream>
 
 using namespace std;
 
-// Class to store movie objects
-class Node {
-public:
+//-----------------------------START OF MAP IMPLEMENTATION-------------------------------//
 
-    string name; // movie title
-    string id; // movie id
-    vector<pair<int, float>> reviews; // all reviews associated with movie
-    vector<string> genres; // all genres associated with movie
-};
-
-// Class to create a min heap
-class minHeap {
+//-----------MOVIE CLASS---------//
+class Movie
+{
 private:
-    Node *array; // array to store movie objects
-    int capacity; // store capacity of array
-    int size; // store current size of array
-    vector<pair<int, pair<string, float>>> reviewsByUser; // store all reviews sorted by userID instead of movie
-
+    string movieName;
+    int movieID;
+    vector<string> genres;
+    vector<pair<int, float>> reviews; //vector<pair<userID,rating>>
 public:
-    minHeap(int capacityNew);
-    int getParent(int node);
-    void insertNode(Node* node);
-    void goodMovieReview(string movie);
-    void badMovieReview(string movie);
-    void goodMovieGenre(string movie);
-    void badMovieGenre(string movie);
-    void bestGenre(string genre);
-    void worstGenre(string genre);
-    void topOverall();
-    void worstOverall();
-    vector<pair<double, string>> averageReviewByMovie();
-    vector<pair<double, string>> averageReviewSpecificMovies(vector<int> movies);
-    void updateUserReviews(vector<pair<int, pair<string, float>>>);
+    Movie();
+    Movie(string movieNme, int movID, vector<string>& genre, vector<pair<int,float>>& review);
+    string getMovieName();
+    int getMovieID();
+    vector<string> getGenres();
+    vector<pair<int,float>> getReviews();
 };
 
-// get the parent index of current node
-int minHeap::getParent(int node) {
-    return (node - 1) / 2;
+Movie::Movie()
+{
+    this->movieName = "";
+    this->movieID = 0;
+    this->genres = {};
+    this->reviews = {};
+}
+Movie::Movie(string movieNme, int movID, vector<string>& genre, vector<pair<int, float>>& review)
+{
+    this->movieName = movieNme;
+    this->movieID = movID;
+    this->genres = genre;
+    this->reviews = review;
 }
 
-// create a minHeap object and intialize it
-minHeap::minHeap(int capacityNew) {
-    size = 0;
-    capacity = capacityNew;
-    array = new Node[capacityNew];
+string Movie::getMovieName()
+{
+    return this->movieName;
 }
 
-// function to insert a node into the min heap
-void minHeap::insertNode(Node* node) {
-
-    // if the node won't fit, print error message
-    if (size == capacity) {
-        cout << "error: need bigger capacity" << endl;
-        return;
-    }
-
-    // increment size and set array index equal to node
-    size++;
-    int i = size - 1;
-    array[i] = *node;
-
-    // movie node into right place in min heap by swapping if parent is larger
-    while (i != 0 && array[getParent(i)].name > array[i].name) {
-        Node temp = array[getParent(i)];
-        array[getParent(i)] = array[i];
-        array[i] = temp;
-        i = getParent(i);
-    }
+int Movie::getMovieID()
+{
+    return this->movieID;
 }
 
-// update the reviews by user vector in minHeap
-void minHeap::updateUserReviews(vector<pair<int, pair<string, float>>> vec) {
-    reviewsByUser = vec;
+vector<string> Movie::getGenres()
+{
+    return this->genres;
 }
 
-// function to get movie recommendations from user reviews
-void minHeap::goodMovieReview(string movie) {
-
-    // start timer
-    auto start = chrono::high_resolution_clock::now();
-
-    // find the index of movie from user input
-    int index = -1;
-    for (unsigned int i = 0; i < size; i++) {
-        if (array[i].name == movie) {
-            index = i;
-            break;
-        }
-    }
-
-    // if movie is not valid, send error message
-    if (index == -1) {
-        cout << "Invalid Movie! Please enter a valid movie title" << endl;
-        return;
-    }
-
-    // initialize vector of high reviews
-    vector<pair<float, int>> highReviews;
-
-    // for all reviews of user input movie, find the ones greater than or equal to 4.0
-    for (unsigned int j = 0; j < array[index].reviews.size(); j++) {
-        if (array[index].reviews.at(j).second >= 4.0) {
-            highReviews.push_back(make_pair(array[index].reviews.at(j).second, array[index].reviews.at(j).first));
-        }
-    }
-
-
-    // sort the reviews from highest to lowest
-    sort(highReviews.begin(), highReviews.end(), greater<>());
-
-    // intialize a temporary vector
-    vector<pair<float, int>> temp;
-
-    // if there are more than 100 reviews greater than or equal to 4.0, only keep the first 100
-    if (highReviews.size() > 100) {
-        for (unsigned int q = 0; q < 100; q++) {
-            temp.push_back(make_pair(highReviews.at(q).first, highReviews.at(q).second));
-        }
-
-        // put these 100 values back into the vector
-        highReviews.clear();
-        highReviews = temp;
-        temp.clear();
-    }
-
-    // create a vector to store the reviews by each user associated with movie titles
-    vector<pair<string, float>> reviewsByTitle;
-
-    // for every userID in highReviews
-    for (unsigned int k = 0; k < highReviews.size(); k++) {
-        // for every review in the vector sorted by user
-        for (unsigned int l = 0; l < reviewsByUser.size(); l++) {
-            // if the userIDs match, the movie being reviewed isn't the original movie, and the review is greater than or equal to 4.0, push this review's information into the vector
-            if (reviewsByUser.at(l).first == highReviews.at(k).second && reviewsByUser.at(l).second.first != array[index].id && reviewsByUser.at(l).second.second >= 4.0) {
-                reviewsByTitle.push_back(make_pair(reviewsByUser.at(l).second.first, reviewsByUser.at(l).second.second));
-            }
-        }
-    }
-
-    // create a temporary map for easy access
-    map<string, vector<float>> averageReviewsTemp;
-
-    // for each of the reviews in the above vector, push them into the map to store all the review values for each movie in individual vectors
-    for (unsigned int m = 0; m < reviewsByTitle.size(); m++) {
-        averageReviewsTemp[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
-    }
-
-    map <float, string, greater<>> averageReviews;
-
-    map<string, vector<float>>::iterator iterTemp;
-
-    // iterate through the map created above and add up all the reviews for each movie, dividing them by the total number of reviews to get an average
-    for (iterTemp = averageReviewsTemp.begin(); iterTemp != averageReviewsTemp.end(); iterTemp++) {
-        float total = 0;
-        for (unsigned int r = 0; r < (*iterTemp).second.size(); r++) {
-            total += (*iterTemp).second.at(r);
-        }
-
-        // store average movie reviews in a map
-        averageReviews[(total/(float) (*iterTemp).second.size())] = (*iterTemp).first;
-    }
-
-    // iterate through this final map and find the movie titles associated with each review, and print the top 10
-    map<float, string, greater<>>::iterator iter = averageReviews.begin();
-
-    // if there are less than 10 movies, print them all out
-    if (averageReviews.size() < 10) {
-        int i = 0;
-        for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++) {
-            for (unsigned int w = 0; w < size; w++) {
-                if (array[w].id == (*iter).second) {
-                    float rating = round((*iter).first * 10.0) / 10.0;
-                    cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
-                    break;
-                }
-            }
-            i++;
-        }
-    }
-
-    // otherwise, print 10 with highest reviews
-    else {
-        for (unsigned int i = 0; i < 10; i++) {
-            for (unsigned int w = 0; w < size; w++) {
-                if (array[w].id == (*iter).second) {
-                    float rating = round((*iter).first * 10.0) / 10.0;
-                    cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
-                    break;
-                }
-            }
-            iter++;
-        }
-    }
-
-    // stop timer and print duration of function
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
-
-    cout << "This process took " << time.count() << " seconds!" << endl;
-
+vector<pair<int,float>> Movie::getReviews()
+{
+    return this->reviews;
 }
 
-void minHeap::badMovieReview(string movie) {
+//---------END OF MOVIE CLASS----------//
 
-    // start timer
-    auto start = chrono::high_resolution_clock::now();
+//---------HELPER FUNCTIONS------------//
+map<int, vector<pair<int, float>>> readInReviews(string fileName, map<int, vector<pair<int, float>>>& reviews) //map<movieID, vector<pair<userID, rating>>>
+{
+    //Variables
+    map<int,vector<pair<int,float>>> tempMap;
 
-    // find the index of the movie from user input
-    int index = -1;
-    for (unsigned int i = 0; i < size; i++) {
-        if (array[i].name == movie) {
-            index = i;
-            break;
+    ifstream inFile(fileName);
+
+    if (inFile.is_open())
+    {
+        //1.Read heading data from the file
+        string lineFromFile;
+        getline(inFile, lineFromFile);
+
+        while (getline(inFile, lineFromFile))
+        {
+            istringstream stream(lineFromFile);
+
+            //Variables
+            string tempUserID;
+            int userID = 0;
+            string tempRating;
+            float rating = 0.0;
+            string tempMovieID;
+            int movieID = 0;
+
+            //Start reading in with getline
+            getline(stream, tempUserID, ',');
+            userID = stoi(tempUserID);
+
+            getline(stream, tempMovieID, ',');
+            movieID = stoi(tempMovieID);
+
+            getline(stream, tempRating, ',');
+            rating = stof(tempRating);
+
+            tempMap[movieID].push_back(make_pair(userID,rating));
         }
     }
-
-    // if movie was not found, print error message
-    if (index == -1) {
-        cout << "Invalid Movie! Please enter a valid movie title" << endl;
-        return;
-    }
-
-    // create a vector to store the lowest reviews
-    vector<pair<float, int>> lowReviews;
-
-    // for all reviews of user input movie, find the ones less than or equal to 2.0
-    for (unsigned int j = 0; j < array[index].reviews.size(); j++) {
-        if (array[index].reviews.at(j).second <= 2.0) {
-            lowReviews.push_back(make_pair(array[index].reviews.at(j).second, array[index].reviews.at(j).first));
-        }
-    }
-
-    // sort the reviews from lowest to highest
-    sort(lowReviews.begin(), lowReviews.end());
-
-    vector<pair<float, int>> temp;
-
-    // if there are more than 100 reviews, pick the 100 lowest ones
-    if (lowReviews.size() > 100) {
-        for (unsigned int q = 0; q < 100; q++) {
-            temp.push_back(make_pair(lowReviews.at(q).first, lowReviews.at(q).second));
-        }
-
-        // put 100 lowest back into original vector
-        lowReviews.clear();
-        lowReviews = temp;
-        temp.clear();
-    }
-
-    // create a vector to store the reviews by each user associated with the movie titles
-    vector<pair<string, float>> reviewsByTitle;
-
-    // for every userID in lowReviews
-    for (unsigned int k = 0; k < lowReviews.size(); k++) {
-        // for every review in the vector sorted by user
-        for (unsigned int l = 0; l < reviewsByUser.size(); l++) {
-            // if the userIDs match, the movie being reviewed isn't the original movie, and the review is less than or equal to 2.0, push this review's information into the vector
-            if (reviewsByUser.at(l).first == lowReviews.at(k).second && reviewsByUser.at(l).second.first != array[index].id && reviewsByUser.at(l).second.second <= 2.0) {
-                reviewsByTitle.push_back(make_pair(reviewsByUser.at(l).second.first, reviewsByUser.at(l).second.second));
-            }
-        }
-    }
-
-    // create a temporary map for easy access
-    map<string, vector<float>> averageReviewsTemp;
-
-    // for each of the reviews in the above vector, push them into the map to store all the reviews for each movie in individual vectors
-    for (unsigned int m = 0; m < reviewsByTitle.size(); m++) {
-        averageReviewsTemp[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
-    }
-
-    // create a second map to store the average values
-    map <float, string> averageReviews;
-
-    map<string, vector<float>>::iterator iterTemp;
-
-    // iterate through the map above and add up all review values for each movie, dividing them by the number of reviews to get an average
-    for (iterTemp = averageReviewsTemp.begin(); iterTemp != averageReviewsTemp.end(); iterTemp++) {
-        float total = 0;
-        for (unsigned int r = 0; r < (*iterTemp).second.size(); r++) {
-            total += (*iterTemp).second.at(r);
-        }
-
-        // store the average review in map
-        averageReviews[(total/(float) (*iterTemp).second.size())] = (*iterTemp).first;
-    }
-
-    // iterate through this map to print lowest average reviewed movies
-    map<float, string>::iterator iter = averageReviews.begin();
-
-    // if the number of movies is less than 10, print them all
-    if (averageReviews.size() < 10) {
-        int i = 0;
-        for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++) {
-            for (unsigned int w = 0; w < size; w++) {
-                if (array[w].id == (*iter).second) {
-                    float rating = round((*iter).first * 10.0) / 10.0;
-                    cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
-                    break;
-                }
-            }
-            i++;
-        }
-    }
-
-    // otherwise, print the lowest 10 reviewed movies
-    else {
-        for (unsigned int i = 0; i < 10; i++) {
-            for (unsigned int w = 0; w < size; w++) {
-                if (array[w].id == (*iter).second) {
-                    float rating = round((*iter).first * 10.0) / 10.0;
-                    cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
-                }
-            }
-            iter++;
-        }
-    }
-
-    // stop the timer and print duration
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
-
-    cout << "This process took " << time.count() << " seconds!" << endl;
-
+    return tempMap;
 }
 
-// function to calculate the average review for every movie in database
-vector<pair<double, string>> minHeap::averageReviewByMovie() {
+void readInMovies(string fileName, map<int,Movie>& movieIDs, map<int, vector<pair<int, float>>>& tempReviews, map<string, Movie>& movieNames)
+{
+    int count = 0;
 
-    // create a temporary map
-    map<string, vector<double>> tempReviews;
+    ifstream inFile(fileName);
 
-    // for every movie in the database, store each of their reviews in a vector in the map
-    for (unsigned int i = 0; i < size; i++) {
-        for (unsigned int j = 0; j < array[i].reviews.size(); j++) {
-            tempReviews[array[i].name].push_back(array[i].reviews.at(j).second);
-        }
-    }
+    if (inFile.is_open())
+    {
+        //1.Read heading data from the file
+        string lineFromFile;
+        getline(inFile, lineFromFile);
 
+        while (getline(inFile, lineFromFile))
+        {
+            istringstream  stream(lineFromFile);
 
-    // iterate through the map and add all the values associated with each movie, dividing them by the number of reviews to get an average
-    map<string, vector<double>>::iterator iter;
-    vector<pair<double, string>> average;
-    for (iter = tempReviews.begin(); iter != tempReviews.end(); iter++) {
-        double total = 0;
-        if ((*iter).second.size() > 100) {
-            for (unsigned int k = 0; k < (*iter).second.size(); k++) {
-                total += (double) (*iter).second.at(k);
-            }
+            //Variables
+            string tempMovieName;
+            string movieName;
+            string tempGenres;
+            vector<string> genres;
+            string tempMovieID;
+            int movieID = 0;
 
-            // push this average into a vector
-            average.push_back(make_pair((total / (double) (*iter).second.size()), (*iter).first));
-        }
-    }
+            //Start reading in with getline
+            getline(stream, tempMovieID, ',');
+            movieID = stoi(tempMovieID);
 
-    // return the vector
-    return average;
-}
+            //Get userID AND reviews for specific movie
+            vector<pair<int,float>> reviews = tempReviews[movieID]; //vector<pair<userID,rating>>
 
-// function to get average reviews for specific movies
-vector<pair<double, string>> minHeap::averageReviewSpecificMovies(vector<int> movies) {
+            //Get movie name
+            getline(stream,tempMovieName);
 
-    // get indices of movies in array from input
-
-    // for each of these specific movies, store their review data in a map of vectors
-    map<string, vector<double>> tempReviews;
-    for (unsigned int i = 0; i < movies.size(); i++) {
-        for (unsigned int j = 0; j < array[movies.at(i)].reviews.size(); j++) {
-            tempReviews[array[movies.at(i)].name].push_back(array[movies.at(i)].reviews.at(j).second);
-        }
-    }
-
-    // for every value in the map, calculate its average by adding all the reviews and dividing by the number of them
-    map<string, vector<double>>::iterator iter;
-    vector<pair<double, string>> average;
-    for (iter = tempReviews.begin(); iter != tempReviews.end(); iter++) {
-        double total = 0;
-        if ((*iter).second.size() > 100) {
-            for (unsigned int k = 0; k < (*iter).second.size(); k++) {
-                total += (double) (*iter).second.at(k);
-            }
-
-            // store these averages in a vector
-            average.push_back(make_pair((total / (double) (*iter).second.size()), (*iter).first));
-        }
-    }
-
-    // return the vector
-    return average;
-}
-
-// function to find highly rated movies in the same genre as a user input movie
-void minHeap::goodMovieGenre(string movie) {
-
-    // start the timer for the function
-    auto start = chrono::high_resolution_clock::now();
-
-    // find the index of the user input movie
-    int index = -1;
-    for (unsigned int i = 0; i < size; i++) {
-        if (array[i].name == movie) {
-            index = i;
-            break;
-        }
-    }
-
-    // if the movie cannot be found, print an error message
-    if (index == -1) {
-        cout << "Invalid Movie! Please enter a valid movie title" << endl;
-        return;
-    }
-
-    // create a vector for movies with at least one genre in common with the original movie
-    vector<int> correctGenreIndices;
-
-    // for every movie in the database
-    for (unsigned int i = 0; i < size; i++) {
-        // if the movie is not the one the user typed in
-        if (i != index) {
-            // go through current movie's genres
-            for (unsigned int j = 0; j < array[i].genres.size(); j++) {
-                // for each of the genres associated with the target movie
-                for (unsigned int k = 0; k < array[index].genres.size(); k++) {
-                    // if the genres are the same, push that movie into the vector
-                    if (array[i].genres.at(j).find(array[index].genres.at(k)) != string::npos) {
-                        correctGenreIndices.push_back(i);
+            //Checks if the movie title starts with quotation
+            if (tempMovieName.at(0) == '\"')
+            {
+                int index = 0;
+                for (int i = 1; i < tempMovieName.size(); i++)
+                {
+                    if (tempMovieName.at(i) == '\"')
+                    {
+                        index = i + 2;
                         break;
+                    }
+                    movieName += tempMovieName.at(i);
+                }
+                tempGenres = tempMovieName.substr(index,tempMovieName.size());
+            }
+            //If the movie title does not start with quotation
+            else
+            {
+                int index = 0;
+                for (int i = 0; i < tempMovieName.size(); i++)
+                {
+                    if (tempMovieName.at(i) == ',')
+                    {
+                        index = i + 1;
+                        break;
+                    }
+                    movieName += tempMovieName.at(i);
+                }
+                tempGenres = tempMovieName.substr(index,tempMovieName.size());
+            }
+
+            //Fills up the Genre vector
+            string tempString;
+            for (int i = 0; i < tempGenres.size(); i++)
+            {
+                if (tempGenres.at(i) == '|' || i == tempGenres.size() - 1)
+                {
+                    genres.push_back(tempString);
+                    tempString = "";
+                    continue;
+                }
+                tempString += tempGenres.at(i);
+            }
+
+            Movie newMovie(movieName,movieID,genres,reviews);
+
+            movieIDs.emplace(movieID,newMovie);
+            movieNames.emplace(movieName,newMovie);
+        }
+    }
+}
+
+float calculateAverageRatings(vector<pair<int, float>> reviews)
+{
+    //Variables
+    float result = 0.0;
+
+    for (int i = 0; i < reviews.size(); i++)
+    {
+        result += reviews[i].second;
+    }
+
+    return result / (float)reviews.size();
+}
+
+float calculateHighAverageRatings(vector<pair<int, float>> reviews)
+{
+    //Variables
+    float result = 0.0;
+
+    for (int i = 0; i < reviews.size(); i++)
+    {
+        if (reviews[i].second >= 4.0)
+        {
+            result += reviews[i].second;
+        }
+    }
+
+    return result / (float)reviews.size();
+}
+
+vector<pair<string,float>> similarGenre(string movie, vector<string>& genres, map<string, Movie> movieNames) //Returns string of movie names
+{
+    //Variables
+    vector<pair<string, float>> namesOfMovies;
+    set<pair<string,vector<pair<int,float>>>> names;
+
+    for (int i = 0; i < genres.size(); i++)
+    {
+        for (auto it = movieNames.begin(); it != movieNames.end(); it++)
+        {
+            if (it->first != movie)
+            {
+                for (int j = 0; j < it->second.getGenres().size(); j++)
+                {
+                    if (genres[i] == it->second.getGenres()[j] && it->second.getReviews().size() > 100)
+                    {
+                        //Puts it in a set so no copies of movies are made
+                        names.emplace(make_pair(it->first,it->second.getReviews()));
                     }
                 }
             }
         }
     }
 
-    // create a vector to store average reviews for each of these movies
-    vector<pair<double, string>> average = averageReviewSpecificMovies(correctGenreIndices);
-
-    // sort the vector from largest to smallest
-    sort(average.begin(), average.end(), greater<>());
-
-    // if there are less than 10 movies, print them all
-    if (average.size() < 10) {
-        for (unsigned int i = 0; i < average.size(); i++) {
-            float rating = round(average.at(i).first * 10.0) / 10.0;
-            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
+    //Transfers from set to a vector that only contains movies that have more than 100 reviews
+    for (auto it = names.begin(); it != names.end(); it++)
+    {
+        if (movieNames[it->first].getReviews().size() > 100)
+        {
+            namesOfMovies.emplace_back(make_pair(it->first, calculateAverageRatings(it->second)));
         }
     }
 
-    // otherwise, print the 10 highest reviewed movies
-    else {
-        for (unsigned int i = 0; i < 10; i++) {
-            float rating = round(average.at(i).first * 10.0) / 10.0;
-            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
+    sort(namesOfMovies.begin(),namesOfMovies.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second > movie2.second;});
+
+    /*vector<pair<string,float>> temp;
+
+    if (namesOfMovies.size() > 100)
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            temp.push_back(namesOfMovies[i]);
         }
-    }
 
-    // stop the timer and print the duration of the function
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+        namesOfMovies.clear();
+        namesOfMovies = temp;
+        temp.clear();
+    }*/
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    return namesOfMovies;
 }
 
-// function to find low rated movies in the same genre as a user input movie
-void minHeap::badMovieGenre(string movie) {
+float getAverageWithMovieList(string movie, vector<pair<string,float>>& moviesList)
+{
+    float sum = 0.0;
+    //map<string,float> result;
+    //vector<pair<string,float>> returnVector;
+    float count = 0.0;
 
-    // start the timer for the function
-    auto start = chrono::high_resolution_clock::now();
+    for (int i = 0; i < moviesList.size(); i++)
+    {
+        if (moviesList[i].first == movie)
+        {
+            sum += moviesList[i].second;
+            count++;
+        }
+    }
 
-    // search for the user input movie in the heap
-    int index = -1;
-    for (unsigned int i = 0; i < size; i++) {
-        if (array[i].name == movie) {
-            index = i;
+    return sum / count;
+}
+
+map<int, vector<pair<string,float>>> getMovieObjectsFromUserID(string fileName, map<int, vector<pair<string, float>>>& reviews, map<int, Movie>& movieIDs)
+{
+    //Variables
+    map<int,vector<pair<string,float>>> tempMap;
+
+    ifstream inFile(fileName);
+
+    if (inFile.is_open())
+    {
+        //1.Read heading data from the file
+        string lineFromFile;
+        getline(inFile, lineFromFile);
+
+        while (getline(inFile, lineFromFile))
+        {
+            istringstream stream(lineFromFile);
+
+            //Variables
+            string tempUserID;
+            int userID = 0;
+            string tempRating;
+            float rating = 0.0;
+            string tempMovieID;
+            int movieID = 0;
+
+            //Start reading in with getline
+            getline(stream, tempUserID, ',');
+            userID = stoi(tempUserID);
+
+            getline(stream, tempMovieID, ',');
+            movieID = stoi(tempMovieID);
+
+            getline(stream, tempRating, ',');
+            rating = stof(tempRating);
+
+            tempMap[userID].push_back(make_pair(movieIDs[movieID].getMovieName(),rating));
+        }
+    }
+    return tempMap;
+}
+
+vector<pair<string,float>> getReviewsFromMovie(string movie, map<string, Movie> movieNames, map<int, vector<pair<int, float>>>& mapReviews, map<int, Movie>& movieIDs) //Return pair<userID,review they gave on movie>>
+{
+    //Variables
+    map<int, vector<pair<string, float>>> userIDsRatingsFromOtherMovies; //map<userID, vector<pair<movieName, review>>>
+    vector<pair<int,float>> userIDsFromReviews; //vector<pair<UserID,rating they gave to movie> (ABOVE 4)
+    vector<pair<string,float>> moviesList; //pair<movieName, normal rating>
+    vector<pair<string,float>> finalList;
+    map<int, vector<pair<string, float>>> UserIDsWithNamesAndRating = getMovieObjectsFromUserID("ratings 2.csv", UserIDsWithNamesAndRating, movieIDs);
+
+    //Goes through the specific movie object and go through each review and compare to see if its more than 4.0
+    for (int i = 0; i < movieNames[movie].getReviews().size(); i++)
+    {
+        if (movieNames[movie].getReviews()[i].second >= 4.0)
+        {
+            //Stores the UserID for the movie input that is over 4 (Used to later find what other movies they liked
+            userIDsFromReviews.push_back(movieNames[movie].getReviews()[i]);
+        }
+    }
+
+    //Sort the reviews and cut it down to only 100 reviews
+    sort(userIDsFromReviews.begin(),userIDsFromReviews.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second > movie2.second;});
+
+    //cut it down to only 100 reviews
+    vector<pair<int,float>> temp; //<UserID, rating>>
+
+    if (userIDsFromReviews.size() > 100)
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            temp.push_back(userIDsFromReviews[i]);
+        }
+
+        userIDsFromReviews.clear();
+        userIDsFromReviews = temp;
+        temp.clear();
+    }
+
+    /*//Use the userID to see what other movies they reviewed that were above 4.0
+    for (int i = 0; i < userIDsFromReviews.size(); i++)
+    {
+        for (auto it = movieNames.begin(); it != movieNames.end(); it++)
+        {
+            for (int j = 0; j < it->second.getReviews().size(); j++)
+            {
+                if (userIDsFromReviews[i].first == it->second.getReviews()[j].first && it->second.getReviews()[j].second >= 4.0)
+                {
+                    userIDsRatingsFromOtherMovies[userIDsFromReviews[i].first].push_back(make_pair(it->first,it->second.getReviews()[j].second));
+                }
+            }
+        }
+    }*/
+
+    //Use the userID to see what other movies they reviewed that were above 4.0
+    for (int i = 0; i < userIDsFromReviews.size(); i++)
+    {
+        if (UserIDsWithNamesAndRating[userIDsFromReviews[i].first][i].first != movie)
+        {
+            userIDsRatingsFromOtherMovies[userIDsFromReviews[i].first].push_back(make_pair(UserIDsWithNamesAndRating[userIDsFromReviews[i].first][i].first, UserIDsWithNamesAndRating[userIDsFromReviews[i].first][i].second));
+        }
+    }
+
+    //Converts the map to movieList that stores <movieName, normal rating>
+    /*for (auto it = userIDsRatingsFromOtherMovies.begin(); it != userIDsRatingsFromOtherMovies.end(); it++)
+    {
+        for (int i = 0; i < userIDsFromReviews.size(); i++)
+        {
+            for (int j = 0; j < userIDsRatingsFromOtherMovies[userIDsFromReviews[i].first].size(); j++)
+            {
+                moviesList.push_back(userIDsRatingsFromOtherMovies[userIDsFromReviews[i].first][j]);
+            }
+        }
+    }*/
+
+    //Converts the map to movieList that stores <movieName, normal rating>
+    for (auto it = userIDsRatingsFromOtherMovies.begin(); it != userIDsRatingsFromOtherMovies.end(); it++)
+    {
+        for (int i = 0; i < userIDsRatingsFromOtherMovies[it->first].size(); i++)
+        {
+            moviesList.push_back(userIDsRatingsFromOtherMovies[it->first][i]);
+        }
+    }
+
+    for (int i = 0; i < moviesList.size(); i++)
+    {
+        finalList.emplace_back(make_pair(moviesList[i].first, getAverageWithMovieList(moviesList[i].first,moviesList)));
+    }
+
+    return finalList;
+}
+
+
+//-------------MAP IMPLEMENTATION METHODS------------------//
+
+//OPTION 1 - Suggestions based on Movie
+void suggestionsBasedOnMovie(string movie, map<string, Movie>& movieNames)
+{
+    //Variables
+    bool movieFound = false;
+    Movie movieObject;
+    vector<pair<string,float>> moviesList;
+
+    //1.Calculate 10 highest rated movies that share at least 1 genre
+    for (auto it = movieNames.begin(); it != movieNames.end(); it++)
+    {
+        if (movie == it->first)
+        {
+            movieFound = true;
+            movieObject = it->second;
             break;
         }
     }
 
-    // if the movie cannot be found, print error message
-    if (index == -1) {
+    if (movieFound)
+    {
+        vector<string> genres;
+
+        //Get the specific object's genre list
+        for (int i = 0; i < movieObject.getGenres().size(); i++)
+        {
+            genres.push_back(movieObject.getGenres()[i]);
+        }
+
+        //Call helper function to find movies with similar genres
+        moviesList = similarGenre(movie, genres, movieNames);
+    }
+    else //If movie name is not found
+    {
         cout << "Invalid Movie! Please enter a valid movie title" << endl;
         return;
     }
 
-    // create a vector for movies with at least one genre in common with the original movie
-    vector<int> correctGenreIndices;
-
-    // for every movie in the database
-    for (unsigned int i = 0; i < size; i++) {
-        // if the movie is not the one the user typed in
-        if (i != index) {
-            // go through the current movie's genres
-            for (unsigned int j = 0; j < array[i].genres.size(); j++) {
-                // for each of the genres associated with the target movie
-                for (unsigned int k = 0; k < array[index].genres.size(); k++) {
-                    // if the genres are the same, push that movie into the vector
-                    if (array[i].genres.at(j).find(array[index].genres.at(k)) != string::npos) {
-                        correctGenreIndices.push_back(i);
-                        break;
-                    }
-                }
-            }
-        }
+    //Print out top 10 movies
+    for (int i = 0; i < 10; i++)
+    {
+        cout << "MovieID: " << movieNames[moviesList[i].first].getMovieID() << " " << moviesList[i].first << " " << "Rating: " << moviesList[i].second << endl;
     }
-
-    // create a vector and store the average reviews for each of the movies found above
-    vector<pair<double, string>> average = averageReviewSpecificMovies(correctGenreIndices);
-
-    // sort the vector from lowest to highest
-    sort(average.begin(), average.end());
-
-    // if there are less than 10 movies, print them all
-    if (average.size() < 10) {
-        for (unsigned int i = 0; i < average.size(); i++) {
-            float rating = round(average.at(i).first * 10.0) / 10.0;
-            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
-        }
-    }
-
-    // otherwise, print the 10 lowest rated movies
-    else {
-        for (unsigned int i = 0; i < 10; i++) {
-            float rating = round(average.at(i).first * 10.0) / 10.0;
-            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
-        }
-    }
-
-    // stop the timer and print the duration for this function
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
-
-    cout << "This process took " << time.count() << " seconds!" << endl;
 }
 
-// function to print highest rated movies in a specific genre
-void minHeap::bestGenre(string genre) {
+//OPTION 2 - Suggestions Based on Genre
+void suggestionsBasedOnGenre(string genre, map<string, Movie>& movieNames)
+{
+    //Variables
+    bool genreFound = false;
+    Movie movieObject;
+    vector<pair<string,float>> moviesList; //pair<movieName, AverageRating>
 
-    // start the timer for function
-    auto start = chrono::high_resolution_clock::now();
-
-//    vector<string> validGenres = {"Action", "Adventure", "Animation", "Children",
-//                                  "Comedy", "Crime", "Drama", "Fantasy", "Horror",
-//                                  "Thriller", "Mystery", "Sci-Fi", "Thriller",
-//                                  "IMAX", "Documentary", "Musical", "Romance",
-//                                  "War", "Western", "Film-Noir"};
-
-    // create a vector to store indices of all movies with desired genre
-    vector<int> indices;
-
-    // for every movie in the database
-    for (unsigned int i = 0; i < size; i++) {
-        // for all of the genres listed for the current movie
-        for (unsigned int j = 0; j < array[i].genres.size(); j++) {
-            // if one of its genres matched the desired genre, push its index into the vector
-            if (array[i].genres.at(j) == genre) {
-                indices.push_back(i);
+    for (auto it = movieNames.begin(); it != movieNames.end(); it++)
+    {
+        for (int i = 0; i < it->second.getGenres().size(); i++)
+        {
+            if (genre == it->second.getGenres()[i] && it->second.getReviews().size() > 100)
+            {
+                genreFound = true;
+                moviesList.emplace_back(make_pair(it->first, calculateAverageRatings(it->second.getReviews())));
                 break;
             }
         }
     }
 
-    // if the genre was not found, print error message
-    if (indices.size() == 0) {
-        cout << "Invalid Genre!" << endl;
+    if (genreFound)
+    {
+        sort(moviesList.begin(),moviesList.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second > movie2.second;});
+    }
+    else
+    {
+        cout << "Invalid Genre! Please enter a valid genre" << endl;
         return;
     }
 
-    // get the average reviews for each movie in the vector
-    vector<pair<double, string>> average = averageReviewSpecificMovies(indices);
-
-    // sort the reviews from highest to lowest
-    sort(average.begin(), average.end(), greater<>());
-
-    // if the number of movies is less than 10, print them all
-    if (average.size() < 10) {
-        for (unsigned int i = 0; i < average.size(); i++) {
-            float rating = round(average.at(i).first * 10.0) / 10.0;
-            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
-        }
+    //Print out top 10 movies
+    for (int i = 0; i < 10; i++)
+    {
+        cout << "MovieID: " << movieNames[moviesList[i].first].getMovieID() << " " << moviesList[i].first << " " << "Rating: " << moviesList[i].second << endl;
     }
-
-    // otherwise, print the top 10 rated movies
-    else {
-        for (unsigned int i = 0; i < 10; i++) {
-            float rating = round(average.at(i).first * 10.0) / 10.0;
-            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
-        }
-    }
-
-    // stop the timer and print the duration of the function
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
-
-    cout << "This process took " << time.count() << " seconds!" << endl;
 }
 
-// function to print lowest rated movies in certain genre
-void minHeap::worstGenre(string genre) {
+//OPTION 3
+void suggestionsBasedOnReviews(string movie,  map<string, Movie>& movieNames, map<int, vector<pair<int, float>>>& mapReviews, map<int, Movie>& movieIDs)
+{
+    //Variables
+    bool movieFound = false;
+    Movie movieObject;
+    vector<pair<string,float>> moviesList; // pair<movieID,reviews
 
-    // start timer for function
-    auto start = chrono::high_resolution_clock::now();
+    for (auto it = movieNames.begin(); it != movieNames.end(); it++)
+    {
+        if (it->first == movie)
+        {
+            movieFound = true;
+            break;
+        }
+    }
 
-    // create a vector to store indices
-    vector<int> indices;
+    if (movieFound)
+    {
+        //Call helper function
+        moviesList = getReviewsFromMovie(movie, movieNames, mapReviews, movieIDs);
+    }
+    else //If movie name is not found
+    {
+        cout << "Invalid Movie! Please enter a valid movie title" << endl;
+        return;
+    }
 
-    // for every movie in the database
-    for (unsigned int i = 0; i < size; i++) {
-        // for every genre of the current movie
-        for (unsigned int j = 0; j < array[i].genres.size(); j++) {
-            // if one of the genres is the desired genre, push that movie's index into the vector
-            if (array[i].genres.at(j) == genre) {
-                indices.push_back(i);
+    //Sort final list
+    sort(moviesList.begin(),moviesList.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second > movie2.second;});
+
+    //Print out top 10 movies
+    for (int i = 0; i < 10; i++)
+    {
+        cout << "MovieID: " << movieNames[moviesList[i].first].getMovieID() << " " << moviesList[i].first << " " << "Rating: " << moviesList[i].second << endl;
+    }
+}
+
+
+//OPTION 4
+void avoidBasedOnMovie(string movie, map<string, Movie>& movieNames)
+{
+    //Variables
+    bool movieFound = false;
+    Movie movieObject;
+    vector<pair<string,float>> moviesList;
+
+    //1.Calculate 10 highest rated movies that share at least 1 genre
+    for (auto it = movieNames.begin(); it != movieNames.end(); it++)
+    {
+        if (movie == it->first)
+        {
+            movieFound = true;
+            movieObject = it->second;
+            break;
+        }
+    }
+
+    if (movieFound)
+    {
+        vector<string> genres;
+
+        //Get the specific object's genre list
+        for (int i = 0; i < movieObject.getGenres().size(); i++)
+        {
+            genres.push_back(movieObject.getGenres()[i]);
+        }
+
+        //Call helper function to find movies with similar genres
+        moviesList = similarGenre(movie, genres, movieNames);
+    }
+    else //If movie name is not found
+    {
+        cout << "Invalid Movie! Please enter a valid movie title" << endl;
+        return;
+    }
+
+    sort(moviesList.begin(),moviesList.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second < movie2.second;});
+
+    //Print out top 10 movies
+    for (int i = 0; i < 10; i++)
+    {
+        cout << "MovieID: " << movieNames[moviesList[i].first].getMovieID() << " " << moviesList[i].first << " " << "Rating: " << moviesList[i].second << endl;
+    }
+}
+
+//OPTION 5
+void avoidBasedOnGenre(string genre, map<string, Movie>& movieNames)
+{
+    //Variables
+    bool genreFound = false;
+    Movie movieObject;
+    vector<pair<string,float>> moviesList;
+
+    for (auto it = movieNames.begin(); it != movieNames.end(); it++)
+    {
+        for (int i = 0; i < it->second.getGenres().size(); i++)
+        {
+            if (genre == it->second.getGenres()[i] && it->second.getReviews().size() > 100)
+            {
+                genreFound = true;
+                moviesList.emplace_back(make_pair(it->first, calculateAverageRatings(it->second.getReviews())));
                 break;
             }
         }
     }
 
-    // if the genre was not found, print error message
-    if (indices.size() == 0) {
-        cout << "Invalid Genre!" << endl;
+    if (genreFound)
+    {
+        sort(moviesList.begin(),moviesList.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second < movie2.second;});
+    }
+    else
+    {
+        cout << "Invalid Genre! Please enter a valid genre" << endl;
         return;
     }
 
-    // get the average review for each movie in the above vector
-    vector<pair<double, string>> average = averageReviewSpecificMovies(indices);
-
-    // sort the reviews from lowest to highest
-    sort(average.begin(), average.end());
-
-    // if there are less than 10 movies in the vector, print them all
-    if (average.size() < 10) {
-        for (unsigned int i = 0; i < average.size(); i++) {
-            float rating = round(average.at(i).first * 10.0) / 10.0;
-            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
-        }
+    //Print out top 10 movies
+    for (int i = 0; i < 10; i++)
+    {
+        cout << "MovieID: " << movieNames[moviesList[i].first].getMovieID() << " " << moviesList[i].first << " " << "Rating: " << moviesList[i].second << endl;
     }
-
-    // otherwise, print the top 10 lowest rated movies
-    else {
-        for (unsigned int i = 0; i < 10; i++) {
-            float rating = round(average.at(i).first * 10.0) / 10.0;
-            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
-        }
-    }
-
-    // stop the timer and print the duration of the function
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
-
-    cout << "This process took " << time.count() << " seconds!" << endl;
-
 }
 
-// print the top 10 rated movies across all genres
-void minHeap::topOverall() {
+//OPTION 7
 
-    // start the timer for the function
-    auto start = chrono::high_resolution_clock::now();
+//OPTION 8
 
-    // create a vector and set it equal to the average reviews for each movie
-    vector<pair<double, string>> average = averageReviewByMovie();
 
-    // sort this vector from highest to lowest
-    sort(average.begin(), average.end(), greater<>());
+int main()
+{
+    //---------------------------MAP IMPLEMENTATION----------------------------//
+    //Variables
+    map<int, Movie> movieIDs; //map<movieID, MovieObject>
+    map<int, vector<pair<int, float>>> mapReviews;
+    map<string, Movie> movieNames;
+    mapReviews = readInReviews("ratings 2.csv", mapReviews);
 
-    // print the top 10 movies
-    for (unsigned int i = 0; i < 10; i++) {
-        float rating = round(average.at(i).first * 10.0) / 10.0;
-        cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
-    }
+    //READ IN MOVIES TO AN OBJECT THAT WILL BE PLACED IN A MAP
+    readInMovies("movies.csv", movieIDs,mapReviews, movieNames);
 
-    // stop the timer and print the duration
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
-
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    //suggestionsBasedOnMovie("Toy Story (1995)", movieNames);
+    //suggestionsBasedOnGenre("Comedy",movieNames);
+    suggestionsBasedOnReviews("Toy Story (1995)", movieNames, mapReviews, movieIDs);
+    //avoidBasedOnMovie("Toy Story (1995)",movieNames);
+    //avoidBasedOnGenre("Comedy",movieNames);
 }
-
-// print the 10 worst rated movies across all genres
-void minHeap::worstOverall() {
-
-    // start the timer for the function
-    auto start = chrono::high_resolution_clock::now();
-
-    // create a vector and set it equal to the average reviews for each movie
-    vector<pair<double, string>> average = averageReviewByMovie();
-
-    // sort this vector from lowest to highest
-    sort(average.begin(), average.end());
-
-    // print the 10 lowest rated movies
-    for (unsigned int i = 0; i < 10; i++) {
-        float rating = round(average.at(i).first * 10.0) / 10.0;
-        cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
-    }
-
-    // stop the timer and print the duration of the function
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
-
-    cout << "This process took " << time.count() << " seconds!" << endl;
-
-}
-
-
-int main() {
-
-    ifstream movieFile;
-    movieFile.open("movies.csv");
-    ifstream ratingsFile;
-    ratingsFile.open("ratings 2.csv");
-    minHeap heap = minHeap(58098);
-    string temporary = "";
-    getline(movieFile, temporary);
-    getline(ratingsFile, temporary);
-
-    map<int, vector<pair<int, float>>> tempReviews;
-    vector<pair<int, pair<string, float>>> userReviews;
-
-    for (unsigned int i = 0; i < 27753444; i++) {
-        string tempUserID = "";
-        string tempMovieID = "";
-        string tempRating = "";
-        string restOfLine = "";
-
-        getline(ratingsFile, tempUserID, ',');
-        getline(ratingsFile, tempMovieID, ',');
-        getline(ratingsFile, tempRating, ',');
-        getline(ratingsFile, restOfLine);
-
-        int userID = stoi(tempUserID);
-        int movieID = stoi(tempMovieID);
-        float rating = stof(tempRating);
-
-        tempReviews[movieID].push_back(make_pair(userID, rating));
-        userReviews.push_back(make_pair(userID, make_pair(tempMovieID, rating)));
-
-    }
-    for (unsigned int i = 0; i < 58098; i++) {
-        Node* temp = new Node;
-        getline(movieFile, temp->id, ',');
-
-
-        getline(movieFile, temp->name, ',');
-        string tempName = "";
-        if (temp->name.at(0) == '\"') {
-            temp->name += ",";
-            while (temp->name.at(temp->name.size() - 1) != '\"' && temp->name.find(')') == string::npos) {
-                getline(movieFile, tempName, ',');
-                temp->name += tempName;
-            }
-            temp->name = temp->name.substr(1, temp->name.size() - 2);
-//            cout << temp->name << endl;
-        }
-
-
-        temporary = "";
-        getline(movieFile,temporary);
-        int p = 0;
-
-        while (temporary.find('|') != string::npos) {
-            p = temporary.find('|');
-            temp->genres.push_back(temporary.substr(0,p));
-            temporary = temporary.substr(p + 1);
-        }
-        if (temporary != "(no genres listed)") {
-            temp->genres.push_back(temporary);
-        }
-
-        for (unsigned int j = 0; j < tempReviews[stoi(temp->id)].size(); j++) {
-            temp->reviews.push_back(make_pair(tempReviews[stoi(temp->id)].at(j).first, tempReviews[stoi(temp->id)].at(j).second));
-        }
-
-        heap.insertNode(temp);
-    }
-
-    heap.updateUserReviews(userReviews);
-    
-//    heap.printHeap();
-
-//    heap.printInOrder(0);
-    heap.goodMovieReview("Toy Story (1995)");
-    cout << endl;
-    heap.badMovieReview("Toy Story (1995)");
-    cout << endl;
-
-    heap.goodMovieGenre("Toy Story (1995)");
-    cout << endl;
-    heap.badMovieGenre("Toy Story (1995)");
-    cout << endl;
-
-    heap.topOverall();
-    cout << endl;
-    heap.worstOverall();
-    cout << endl;
-
-    heap.bestGenre("Comedy");
-    cout << endl;
-    heap.worstGenre("Comedy");
-    cout << endl;
-    return 0;
-}
-
