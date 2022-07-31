@@ -323,9 +323,12 @@ vector<Node*> getNodes(Node* root,vector<Node*> vectors)
     return movieObjects;
 }
 
-vector<pair<int,float>> getReviewsFromMovie(string fileName, int ID) {
+vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
+{
     //Variables
-    vector<pair<int, float>> reviews;
+    vector<pair<int, vector<pair<int, float>>>> reviews;
+    pair<int, vector<pair<int,float>>> userReviews;
+    int count = 0;
 
     ifstream inFile(fileName);
 
@@ -352,14 +355,13 @@ vector<pair<int,float>> getReviewsFromMovie(string fileName, int ID) {
 
             getline(stream, tempMovieID, ',');
             movieID = stoi(tempMovieID);
-
             getline(stream, tempRating, ',');
             rating = stof(tempRating);
 
-            if (movieID == ID)
-            {
-                reviews.emplace_back(make_pair(userID, rating));
-            }
+            //reviews.emplace_back(make_pair(movieID, reviews[count].second.emplace_back(make_pair(userID,rating))));
+            userReviews = make_pair(movieID, userReviews.second[count].emplace_back(make_pair(userID,rating)));
+
+            count++;
         }
     }
     return reviews;
@@ -373,6 +375,13 @@ void readIntoMap(string fileName, Map& map)
         //1.Read heading data from the file
         string lineFromFile;
         getline(inFile, lineFromFile);
+
+        //Variables
+        int count = 0;
+        vector<pair<int, vector<pair<int, float>>>> userReviews = getReviewsFromMovie("ratings 2.csv");
+
+        //Sort the userReviews based on movieID to be able to access it
+        sort(userReviews.begin(),userReviews.end(), );
 
         while (getline(inFile, lineFromFile))
         {
@@ -390,8 +399,6 @@ void readIntoMap(string fileName, Map& map)
             getline(stream, tempMovieID, ',');
             movieID = stoi(tempMovieID);
 
-            //Get userID AND reviews for specific movie
-            vector<pair<int, float>> reviews = getReviewsFromMovie("ratings 2.csv", movieID); //vector<pair<userID,rating>>
 
             //Get movie name
             getline(stream, tempMovieName);
@@ -412,10 +419,13 @@ void readIntoMap(string fileName, Map& map)
                 tempGenres = tempMovieName.substr(index, tempMovieName.size());
             }
                 //If the movie title does not start with quotation
-            else {
+            else
+            {
                 int index = 0;
-                for (int i = 0; i < tempMovieName.size(); i++) {
-                    if (tempMovieName.at(i) == ',') {
+                for (int i = 0; i < tempMovieName.size(); i++)
+                {
+                    if (tempMovieName.at(i) == ',')
+                    {
                         index = i + 1;
                         break;
                     }
@@ -436,11 +446,11 @@ void readIntoMap(string fileName, Map& map)
                 tempString += tempGenres.at(i);
             }
 
-            //Movie newMovie(movieName, movieID, genres, reviews);
+            //Insert the node into the map (Red-Black Tree)
+            map.insertNode(movieName,movieID,userReviews[movieID].second,genres);
 
-            map.insertNode(movieName,movieID,reviews,genres);
+            count++;
         }
-        cout << "done" << endl;
     }
 }
 
@@ -449,7 +459,6 @@ int main()
     //---------------------------MAP IMPLEMENTATION----------------------------//
     //Variables
     Map movieNames;
-    //vector<pair<int, pair<int, float>>> userReviews = ;
 
     readIntoMap("movies.csv", movieNames);
 
