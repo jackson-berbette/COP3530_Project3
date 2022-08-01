@@ -56,17 +56,23 @@ public:
         this->root = nullptr;
     }
 
-    Node* getRoot();
     void insertNode(string& movieName, int id, vector<pair<int,float>>& reviews, vector<string>& genres);
+
+    //HelperFunctions
     Node* searchMovie(Node* root, string name);
     Node* searchMovieID(Node* root, int id);
+    Node* getRoot();
     void updateReviewsByUser(vector<pair<int, pair<int, float>>> vec);
+
+    //Method calls
     void suggestionsBasedOnMovie(string name, vector<Node*>& traversePtrs); //Option 1
     void suggestionsBasedOnGenre(string genre, vector<Node*>& traversePtrs); //Option 2
+    void suggestionsBasedOnReviews(Node* root, string movie); //Option 3
+    void bestOverallMovies(vector<Node*>& traversePtrs); //Option 4
     void avoidBasedOnMovie(string name, vector<Node*>& traversePtrs); //Option 5 (Inverse of 1)
     void avoidBasedOnGenre(string genre, vector<Node*>& traversePtrs); //Option 6 (Inverse of 2)
-    void goodMovieReview(Node* root, string movie);
-    void badMovieReview(Node* root, string movie);
+    void avoidBasedOnReview(Node* root, string movie); //Option 7 (Inverse of 3)
+    void worstOverallMovies(vector<Node*>& traversePtrs); //Option 8 (Inverse of 4)
 };
 
 //-------HELPER FUNCTION-----------//
@@ -261,6 +267,9 @@ float calculateAverageRatings(vector<pair<int, float>> reviews)
 //OPTION 1
 void Map::suggestionsBasedOnMovie(string name, vector<Node*>& traversePtrs)
 {
+    //Clock to keep track
+    auto start = chrono::high_resolution_clock::now();
+
     //Variables
     Node* movieNode = searchMovie(root, name);
     vector<pair<string, float>> namesOfMovies;
@@ -307,6 +316,13 @@ void Map::suggestionsBasedOnMovie(string name, vector<Node*>& traversePtrs)
         {
             cout <<  i + 1 << ". " << namesOfMovies[i].first << ", Rating: " << setprecision(1) << namesOfMovies[i].second <<endl;
         }
+
+        //Print the time it took to complete
+        auto stop = chrono::high_resolution_clock::now();
+        auto duration = (stop - start);
+        auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+        cout << "This process took " << time.count() << " seconds!" << endl;
     }
     else
     {
@@ -317,6 +333,9 @@ void Map::suggestionsBasedOnMovie(string name, vector<Node*>& traversePtrs)
 
 void Map::avoidBasedOnMovie(string name, vector<Node*>& traversePtrs)
 {
+    //Clock to keep track
+    auto start = chrono::high_resolution_clock::now();
+
     //Variables
     Node* movieNode = searchMovie(root, name);
     vector<pair<string, float>> namesOfMovies;
@@ -364,6 +383,13 @@ void Map::avoidBasedOnMovie(string name, vector<Node*>& traversePtrs)
         {
             cout <<  i + 1 << ". " << namesOfMovies[i].first << ", Rating: " << setprecision(1) << namesOfMovies[i].second <<endl;
         }
+
+        //Print the time it took to complete
+        auto stop = chrono::high_resolution_clock::now();
+        auto duration = (stop - start);
+        auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+        cout << "This process took " << time.count() << " seconds!" << endl;
     }
     else
     {
@@ -415,6 +441,9 @@ Node *Map::getRoot()
 
 void Map::suggestionsBasedOnGenre(string genre, vector<Node*>& traversePtrs)
 {
+    //Clock to keep track
+    auto start = chrono::high_resolution_clock::now();
+
     //Variables
     bool genreFound = false;
     vector<pair<string,float>> moviesList; //pair<movieName, AverageRating>
@@ -447,6 +476,13 @@ void Map::suggestionsBasedOnGenre(string genre, vector<Node*>& traversePtrs)
     {
         cout <<  i + 1 << ". " << moviesList[i].first << ", Rating: " << setprecision(1) << moviesList[i].second <<endl;
     }
+
+    //Print the time it took to complete
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = (stop - start);
+    auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+    cout << "This process took " << time.count() << " seconds!" << endl;
 }
 
 void Map::updateReviewsByUser(vector<pair<int, pair<int, float>>> vec)
@@ -456,6 +492,9 @@ void Map::updateReviewsByUser(vector<pair<int, pair<int, float>>> vec)
 
 void Map::avoidBasedOnGenre(string genre, vector<Node *> &traversePtrs)
 {
+    //Clock to keep track
+    auto start = chrono::high_resolution_clock::now();
+
     //Variables
     bool genreFound = false;
     vector<pair<string,float>> moviesList; //pair<movieName, AverageRating>
@@ -488,10 +527,20 @@ void Map::avoidBasedOnGenre(string genre, vector<Node *> &traversePtrs)
     {
         cout <<  i + 1 << ". " << moviesList[i].first << ", Rating: " << setprecision(1) << moviesList[i].second <<endl;
     }
+
+    //Print the time it took to complete
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = (stop - start);
+    auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+    cout << "This process took " << time.count() << " seconds!" << endl;
 }
 
-void Map::goodMovieReview(Node* root, string movie) {
+void Map::suggestionsBasedOnReviews(Node *root, string movie)
+{
+    //Clock to keep track of time
     auto start = chrono::high_resolution_clock::now();
+
     Node* temp = searchMovie(root, movie);
     if (temp == nullptr) {
         cout << "Invalid Movie! Please enter a valid movie title" << endl;
@@ -572,16 +621,19 @@ void Map::goodMovieReview(Node* root, string movie) {
         }
     }
 
+    //Print out how long it took
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
     auto time = chrono::duration_cast<chrono::seconds>(duration);
 
     cout << "This process took " << time.count() << " seconds!" << endl;
-
 }
 
-void Map::badMovieReview(Node* root, string movie) {
+void Map::avoidBasedOnReview(Node *root, string movie)
+{
+    //Clock to keep track of how long it took
     auto start = chrono::high_resolution_clock::now();
+
     Node* temp = searchMovie(root, movie);
     if (temp == nullptr) {
         cout << "Invalid Movie! Please enter a valid movie title" << endl;
@@ -654,18 +706,83 @@ void Map::badMovieReview(Node* root, string movie) {
 
     if (averageMovies.size() < 10) {
         for (unsigned int p = 0; p < averageMovies.size(); p++) {
-                float rate = round(averages.at(p).first * 10.0) / 10.0;
-                cout << p + 1 << ". " << averageMovies.at(p).second << ", Rating: " << fixed << setprecision(1) << rate << endl;
+            float rate = round(averages.at(p).first * 10.0) / 10.0;
+            cout << p + 1 << ". " << averageMovies.at(p).second << ", Rating: " << fixed << setprecision(1) << rate << endl;
         }
     }
 
     else {
         for (unsigned int p = 0; p < 10; p++) {
-                float rate = round(averages.at(p).first * 10.0) / 10.0;
-                cout << p + 1 << ". " << averageMovies.at(p).second << ", Rating: " << fixed << setprecision(1) << rate << endl;
+            float rate = round(averages.at(p).first * 10.0) / 10.0;
+            cout << p + 1 << ". " << averageMovies.at(p).second << ", Rating: " << fixed << setprecision(1) << rate << endl;
         }
     }
 
+    //Print out how long it took
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = (stop - start);
+    auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+    cout << "This process took " << time.count() << " seconds!" << endl;
+}
+
+void Map::bestOverallMovies(vector<Node*>& traversePtrs)
+{
+    //Clock to keep track of how long it took
+    auto start = chrono::high_resolution_clock::now();
+
+    //Variables
+    vector<pair<string, float>> result;
+
+    for (int i = 0; i < traversePtrs.size(); i++)
+    {
+        if (traversePtrs[i]->reviews.size() > 100)
+        {
+            result.emplace_back(make_pair(traversePtrs[i]->movieName, calculateAverageRatings(traversePtrs[i]->reviews)));
+        }
+    }
+
+    sort(result.begin(), result.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second > movie2.second;});
+
+    //Print out top 10 movies
+    for (int i = 0; i < 10; i++)
+    {
+        cout <<  i + 1 << ". " << result[i].first << ", Rating: " << setprecision(1) << result[i].second <<endl;
+    }
+
+    //Print out how long it took
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = (stop - start);
+    auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+    cout << "This process took " << time.count() << " seconds!" << endl;
+}
+
+void Map::worstOverallMovies(vector<Node *> &traversePtrs)
+{
+    //Clock to keep track of how long it took
+    auto start = chrono::high_resolution_clock::now();
+
+    //Variables
+    vector<pair<string, float>> result;
+
+    for (int i = 0; i < traversePtrs.size(); i++)
+    {
+        if (traversePtrs[i]->reviews.size() > 100)
+        {
+            result.emplace_back(make_pair(traversePtrs[i]->movieName, calculateAverageRatings(traversePtrs[i]->reviews)));
+        }
+    }
+
+    sort(result.begin(), result.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second < movie2.second;});
+
+    //Print out top 10 movies
+    for (int i = 0; i < 10; i++)
+    {
+        cout <<  i + 1 << ". " << result[i].first << ", Rating: " << setprecision(1) << result[i].second <<endl;
+    }
+
+    //Print out how long it took
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
     auto time = chrono::duration_cast<chrono::seconds>(duration);
@@ -854,9 +971,13 @@ int main()
     vector<Node*> traversePtrs = getNodes(movieNames.getRoot(), traversePtrs);
 
     //------------METHOD CALLS------------//
-    movieNames.suggestionsBasedOnMovie("Toy Story (1995)", traversePtrs); //Option 1
+    //movieNames.suggestionsBasedOnMovie("Toy Story (1995)", traversePtrs); //Option 1
     //movieNames.suggestionsBasedOnGenre("Comedy", traversePtrs); //Option 2
+    //movieNames.suggestionsBasedOnReviews(movieNames.getRoot(), "Toy Story (1995)"); //Option 3
+    //movieNames.bestOverallMovies(traversePtrs); //Option 4
     //movieNames.avoidBasedOnMovie("Toy Story (1995)", traversePtrs); //Option 5
     //movieNames.avoidBasedOnGenre("Comedy", traversePtrs); //Option 6
+    //movieNames.avoidBasedOnReview(movieNames.getRoot(), "Toy Story (1995)"); //Option 7
+    movieNames.worstOverallMovies(traversePtrs); //Option 8
 
 }
