@@ -807,7 +807,6 @@ int main() {
 
     cout << "Building the min-heap took " << time.count() << " seconds!" << endl;
 
-//    heap.printHeap();
 
 //    heap.printInOrder(0);
 //    heap.goodMovieReview("Jumanji (1995)");
