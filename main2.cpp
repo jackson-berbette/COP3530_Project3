@@ -149,13 +149,13 @@ void Map::rotateRight(Node* &root, Node* &node)
         root = node_left;
     }
 
-    // otherwise, if the node is parent's right child, set it equal to the left node
+        // otherwise, if the node is parent's right child, set it equal to the left node
     else if (node == node->parent->right)
     {
         node->parent->right = node_left;
     }
 
-    // otherwise, set left child equal to node's left
+        // otherwise, set left child equal to node's left
     else
     {
         node->parent->left = node_left;
@@ -440,24 +440,29 @@ Node* Map::searchMovie(Node* root, string movie)
 
 Node* Map::searchMovieID(Node* root, int id)
 {
+    // if this node is the wanted node, return it
     if (root->id == id)
     {
         return root;
     }
 
     Node* temp = nullptr;
+    // if there is a left child, search there for node
     if (root->left != nullptr)
     {
         temp = searchMovieID(root->left, id);
     }
+    // if node was found, return it
     if (temp != nullptr)
     {
         return temp;
     }
+    // if there is a right child, search there for node
     if (root->right != nullptr)
     {
         temp = searchMovieID(root->right, id);
     }
+    // return temp (nullptr if not found, points to a node otherwise)
     return temp;
 }
 
@@ -575,17 +580,23 @@ void Map::suggestionsBasedOnReviews(Node *root, string movie)
     //Clock to keep track of time
     auto start = chrono::high_resolution_clock::now();
 
+    // find the movie that the user input
     Node* temp = searchMovie(root, movie);
+
+    // if movie wasn't found, print error message
     if (temp == nullptr)
     {
         cout << "Invalid Movie! Please enter a valid movie title" << endl;
         return;
     }
 
+    // intialize a vector for the highest reviews
     vector<pair<float, int>> highReviews;
 
+    // search all the reviews of the movie
     for (unsigned int i = 0; i < temp->reviews.size(); i++)
     {
+        // if review is greater than or equal to 4.0, push it into vector
         if (temp->reviews.at(i).second >= 4.0)
         {
             highReviews.push_back(make_pair(temp->reviews.at(i).second, temp->reviews.at(i).first));
@@ -593,10 +604,12 @@ void Map::suggestionsBasedOnReviews(Node *root, string movie)
     }
 
 
+    // sort reviews from highest to lowest
     sort(highReviews.begin(), highReviews.end(), greater<>());
 
     vector<pair<float, int>> temporary;
 
+    // if there are more than 100, take only 100 highest reviews
     if (highReviews.size() > 100)
     {
         for (unsigned int k = 0; k < 100; k++)
@@ -610,10 +623,13 @@ void Map::suggestionsBasedOnReviews(Node *root, string movie)
 
     vector<pair<int, float>> reviewsByTitle;
 
+    // for every high rating
     for (unsigned int h = 0; h < highReviews.size(); h++)
     {
+        // for all the reviews sorted by user
         for (unsigned int l = 0; l < reviewsByUser.size(); l++)
         {
+            // if the same user gave both ratings, the movie is different, and the rating is 4.0 or higher, push it into the vector
             if (reviewsByUser.at(l).first == highReviews.at(h).second && reviewsByUser.at(l).second.first != temp->id && reviewsByUser.at(l).second.second >= 4.0)
             {
                 reviewsByTitle.push_back(make_pair(reviewsByUser.at(l).second.first, reviewsByUser.at(l).second.second));
@@ -624,6 +640,7 @@ void Map::suggestionsBasedOnReviews(Node *root, string movie)
 
     unordered_map<int, vector<float>> averageReviews;
 
+    // for all of the reviews by title, push them into an unordered map
     for (unsigned int m = 0; m < reviewsByTitle.size(); m++)
     {
         averageReviews[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
@@ -631,6 +648,7 @@ void Map::suggestionsBasedOnReviews(Node *root, string movie)
 
     vector<pair<float, int>> averages;
 
+    // use map to add all ratings for each movie and divide by number of ratings to get average
     unordered_map<int, vector<float>>::iterator iter;
     for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++) {
         float total = 0;
@@ -642,8 +660,10 @@ void Map::suggestionsBasedOnReviews(Node *root, string movie)
         }
     }
 
+    // sort averages from greatest to least
     sort(averages.begin(), averages.end(), greater<>());
 
+    // if there are less than 10 movies, print them all
     if (averages.size() < 10)
     {
         for (unsigned int p = 0; p < averages.size(); p++)
@@ -656,6 +676,8 @@ void Map::suggestionsBasedOnReviews(Node *root, string movie)
             }
         }
     }
+
+    // otherwise, print only 10 highest movies
     else
     {
         for (unsigned int p = 0; p < 10; p++)
@@ -682,6 +704,7 @@ void Map::avoidBasedOnReview(Node *root, string movie)
     //Clock to keep track of how long it took
     auto start = chrono::high_resolution_clock::now();
 
+    // search for movie that user input
     Node* temp = searchMovie(root, movie);
     if (temp == nullptr)
     {
@@ -691,8 +714,10 @@ void Map::avoidBasedOnReview(Node *root, string movie)
 
     vector<pair<float, int>> lowReviews;
 
+    // for all the reviews of that movie
     for (unsigned int i = 0; i < temp->reviews.size(); i++)
     {
+        // if it is less than or equal to 2.0, push into a vector
         if (temp->reviews.at(i).second <= 2.0)
         {
             lowReviews.push_back(make_pair(temp->reviews.at(i).second, temp->reviews.at(i).first));
@@ -700,10 +725,12 @@ void Map::avoidBasedOnReview(Node *root, string movie)
     }
 
 
+    // sort the reviews from lowest to highest
     sort(lowReviews.begin(), lowReviews.end());
 
     vector<pair<float, int>> temporary;
 
+    // if there are more than 100 reviews, keep only 100 lowest
     if (lowReviews.size() > 100)
     {
         for (unsigned int k = 0; k < 100; k++)
@@ -717,10 +744,13 @@ void Map::avoidBasedOnReview(Node *root, string movie)
 
     vector<pair<int, float>> reviewsByTitle;
 
+    // for all the low reviews
     for (unsigned int h = 0; h < lowReviews.size(); h++)
     {
+        // for every review sorted by user
         for (unsigned int l = 0; l < reviewsByUser.size(); l++)
         {
+            // if the userIDs are the same, the movie isn't the original movie, and the rating is less than or equal to 2.0, push into a vector
             if (reviewsByUser.at(l).first == lowReviews.at(h).second && reviewsByUser.at(l).second.first != temp->id && reviewsByUser.at(l).second.second <= 2.0)
             {
                 reviewsByTitle.push_back(make_pair(reviewsByUser.at(l).second.first, reviewsByUser.at(l).second.second));
@@ -731,6 +761,7 @@ void Map::avoidBasedOnReview(Node *root, string movie)
 
     unordered_map<int, vector<float>> averageReviews;
 
+    // push all reviews sorted by movie into an unordered map
     for (unsigned int m = 0; m < reviewsByTitle.size(); m++)
     {
         averageReviews[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
@@ -738,6 +769,7 @@ void Map::avoidBasedOnReview(Node *root, string movie)
 
     vector<pair<float, int>> averages;
 
+    // add all reviews for each movie and divide by number of reviews to get average
     unordered_map<int, vector<float>>::iterator iter;
     for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++)
     {
@@ -752,8 +784,10 @@ void Map::avoidBasedOnReview(Node *root, string movie)
         }
     }
 
+    // sort reviews from lowest to highest
     sort(averages.begin(), averages.end());
 
+    // push averages into a vector
     vector<pair<float, string>> averageMovies;
     for (unsigned int e = 0; e < averages.size(); e++)
     {
@@ -764,8 +798,10 @@ void Map::avoidBasedOnReview(Node *root, string movie)
         }
     }
 
+    // sort movies again from lowest to highest
     sort(averageMovies.begin(), averageMovies.end());
 
+    // if there are less than 10 movies, print them all
     if (averageMovies.size() < 10)
     {
         for (unsigned int p = 0; p < averageMovies.size(); p++)
@@ -775,6 +811,7 @@ void Map::avoidBasedOnReview(Node *root, string movie)
         }
     }
 
+    // otherwise, print only 10 lowest
     else
     {
         for (unsigned int p = 0; p < 10; p++)
@@ -1041,7 +1078,7 @@ int main()
     auto duration = (stop - start);
     auto time = chrono::duration_cast<chrono::seconds>(duration);
 
-    cout << "Building the Red-Black Tree " << time.count() << " seconds!" << endl;
+    cout << "Building the Red-Black Tree took " << time.count() << " seconds!" << endl;
 
     //TraversePtrs contains all nodes from the tree
     vector<Node*> traversePtrs = getNodes(movieNames.getRoot(), traversePtrs);
