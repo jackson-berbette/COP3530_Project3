@@ -112,6 +112,17 @@ public:
     void goodMovieReview(Node* root, string movie);
     void badMovieReview(Node* root, string movie);
     void updateReviewsByUser(vector<pair<int, pair<int, float>>> vec);
+    vector<pair<double, string>> averageReviewByMovie();
+    vector<pair<double, string>> averageReviewSpecificMovies(vector<Node*> movies);
+    void goodMovieGenre(string movie);
+    void badMovieGenre(string movie);
+    void bestGenre(string genre);
+    void worstGenre(string genre);
+    void topOverall();
+    void worstOverall();
+    void inOrderRetrievalReviews(Node* root, unordered_map<string, vector<double>>& temp);
+    void inOrderRetrievalGenres(Node* root, unordered_map<Node*, vector<string>>& temp);
+
     Node* getRoot();
     void inOrder(Node* root);
     //vector<pair<string>> returnSimilarGenres();
@@ -268,10 +279,10 @@ void Map::rotateLeft(Node *&root, Node *&node)
 void Map::fixViolation(Node *&root, Node *&node)
 {
 
-    cout << "WHAT" << endl;
+//    cout << "WHAT" << endl;
     Node* temp;
         while (node->parent->color == RED) {
-            cout << "HEY" << endl;
+//            cout << "HEY" << endl;
             if (node->parent == node->parent->parent->right) {
                 temp = node->parent->parent->left;
                 if (temp->color == RED) {
@@ -517,6 +528,7 @@ void readIntoMap(string fileName, Map& map)
         //Sort the userReviews based on movieID to be able to access it
         sort(userReviews.begin(),userReviews.end());
 
+
         for (unsigned int j = 0; j < 58098; j++)
         {
             getline(inFile, lineFromFile);
@@ -574,25 +586,36 @@ void readIntoMap(string fileName, Map& map)
 
             //Fills up the Genre vector
             string tempString;
-            for (int i = 0; i < tempGenres.size(); i++)
-            {
-                if (tempGenres.at(i) == '|' || i == tempGenres.size() - 1) {
-                    genres.push_back(tempString);
-                    tempString = "";
-                    continue;
+            if (tempString != "(no genres listed)") {
+                for (int i = 0; i < tempGenres.size(); i++) {
+                    if (tempGenres.at(i) == '|' || i == tempGenres.size() - 1) {
+                        genres.push_back(tempString);
+                        tempString = "";
+                        continue;
+                    }
+                    tempString += tempGenres.at(i);
                 }
-                tempString += tempGenres.at(i);
             }
-            //Insert the node into the map (Red-Black Tree)
-            map.insertNode(movieName,movieID,userReviews[count].second,genres);
 
-            count++;
+
+            vector<pair<int, float>> temporaryVec;
+            for (unsigned int w = 0; w < userReviews.size(); w++) {
+                if (userReviews.at(w).first == movieID) {
+                   temporaryVec = userReviews.at(w).second;
+                    break;
+                }
+            }
+
+
+            //Insert the node into the map (Red-Black Tree)
+            map.insertNode(movieName,movieID,temporaryVec,genres);
+
         }
         map.updateReviewsByUser(reviewsByUser);
     }
     map.inOrder(map.getRoot());
 
-    map.goodMovieReview(map.getRoot(), "Jumanji (1995)");
+    map.badMovieGenre("Toy Story (1995)");
 
 
 }
@@ -665,7 +688,6 @@ void Map::goodMovieReview(Node* root, string movie) {
         for (unsigned int l = 0; l < reviewsByUser.size(); l++) {
             if (reviewsByUser.at(l).first == highReviews.at(h).second && reviewsByUser.at(l).second.first != temp->id && reviewsByUser.at(l).second.second >= 4.0) {
                 reviewsByTitle.push_back(make_pair(reviewsByUser.at(l).second.first, reviewsByUser.at(l).second.second));
-//                cout << reviewsByUser.at(l).second.first << " " << reviewsByUser.at(l).second.second << endl;
             }
         }
     }
@@ -756,7 +778,6 @@ void Map::badMovieReview(Node* root, string movie) {
         for (unsigned int l = 0; l < reviewsByUser.size(); l++) {
             if (reviewsByUser.at(l).first == lowReviews.at(h).second && reviewsByUser.at(l).second.first != temp->id && reviewsByUser.at(l).second.second <= 2.0) {
                 reviewsByTitle.push_back(make_pair(reviewsByUser.at(l).second.first, reviewsByUser.at(l).second.second));
-//                cout << reviewsByUser.at(l).second.first << " " << reviewsByUser.at(l).second.second << endl;
             }
         }
     }
@@ -819,6 +840,171 @@ void Map::badMovieReview(Node* root, string movie) {
 
     cout << "This process took " << time.count() << " seconds!" << endl;
 }
+
+void Map::inOrderRetrievalReviews(Node* root, unordered_map<string, vector<double>>& temp) {
+    if (root != nullptr) {
+        inOrderRetrievalReviews(root->left, temp);
+        for (unsigned int i = 0; i < root->reviews.size(); i++) {
+            temp[root->movieName].push_back((double)root->reviews.at(i).second);
+        }
+        inOrderRetrievalReviews(root->right, temp);
+    }
+}
+
+void Map::inOrderRetrievalGenres(Node* root, unordered_map<Node*, vector<string>>& temp) {
+    if (root != nullptr) {
+        inOrderRetrievalGenres(root->left, temp);
+        for (unsigned int i = 0; i < root->genres.size(); i++) {
+            temp[root].push_back(root->genres.at(i));
+        }
+        inOrderRetrievalGenres(root->right, temp);
+    }
+}
+
+vector<pair<double, string>> Map::averageReviewByMovie() {
+    unordered_map<string, vector<double>> tempReviews;
+    inOrderRetrievalReviews(root, tempReviews);
+
+    unordered_map<string, vector<double>>::iterator iter;
+    vector<pair<double, string>> average;
+    for (iter = tempReviews.begin(); iter != tempReviews.end(); iter++) {
+        double total = 0;
+        if ((*iter).second.size() > 100) {
+            for (unsigned int k = 0; k < (*iter).second.size(); k++) {
+                total += (double) (*iter).second.at(k);
+            }
+
+            average.push_back(make_pair((total / (double) (*iter).second.size()), (*iter).first));
+        }
+    }
+
+    return average;
+}
+
+vector<pair<double, string>> Map::averageReviewSpecificMovies(vector<Node*> movies) {
+    unordered_map<string, vector<double>> tempReviews;
+    for (unsigned int i = 0; i < movies.size(); i++) {
+        for (unsigned int j = 0; j < movies.at(i)->reviews.size(); j++) {
+            tempReviews[movies.at(i)->movieName].push_back(movies.at(i)->reviews.at(j).second);
+        }
+    }
+
+    unordered_map<string, vector<double>>::iterator iter;
+    vector<pair<double, string>> average;
+    for (iter = tempReviews.begin(); iter != tempReviews.end(); iter++) {
+        double total = 0;
+        if ((*iter).second.size() > 100) {
+            for (unsigned int k = 0; k < (*iter).second.size(); k++) {
+                total += (double)(*iter).second.at(k);
+            }
+            average.push_back(make_pair((total / (double) (*iter).second.size()), (*iter).first));
+        }
+    }
+
+    return average;
+}
+void Map::goodMovieGenre(string movie) {
+    auto start = chrono::high_resolution_clock::now();
+    Node* temp = searchMovie(root, movie);
+    if (temp == nullptr) {
+        cout << "Invalid Movie! Please enter a valid movie title" << endl;
+        return;
+    }
+
+
+    vector<Node*> correctMovies;
+    unordered_map<Node*, vector<string>> temporary;
+    inOrderRetrievalGenres(root, temporary);
+
+
+
+    unordered_map<Node*, vector<string>>::iterator iter;
+    for (iter = temporary.begin(); iter != temporary.end(); iter++) {
+        if ((*iter).first->movieName != temp->movieName) {
+            for (unsigned int i = 0; i < (*iter).second.size(); i++) {
+                for (unsigned int j = 0; j < temp->genres.size(); j++) {
+                    if ((*iter).second.at(i).find(temp->genres.at(j)) != string::npos) {
+                        correctMovies.push_back((*iter).first);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+
+    vector<pair<double, string>> average = averageReviewSpecificMovies(correctMovies);
+
+    sort(average.begin(), average.end(), greater<>());
+
+    if (average.size() < 10) {
+        for (unsigned int i = 0; i < average.size(); i++) {
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
+        }
+    }
+
+    else {
+        for (unsigned int i = 0; i < 10; i++) {
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
+        }
+    }
+
+
+}
+void Map::badMovieGenre(string movie) {
+    auto start = chrono::high_resolution_clock::now();
+    Node* temp = searchMovie(root, movie);
+    if (temp == nullptr) {
+        cout << "Invalid Movie! Please enter a valid movie title" << endl;
+        return;
+    }
+
+
+    vector<Node*> correctMovies;
+    unordered_map<Node*, vector<string>> temporary;
+    inOrderRetrievalGenres(root, temporary);
+
+
+
+    unordered_map<Node*, vector<string>>::iterator iter;
+    for (iter = temporary.begin(); iter != temporary.end(); iter++) {
+        if ((*iter).first->movieName != temp->movieName) {
+            for (unsigned int i = 0; i < (*iter).second.size(); i++) {
+                for (unsigned int j = 0; j < temp->genres.size(); j++) {
+                    if ((*iter).second.at(i).find(temp->genres.at(j)) != string::npos) {
+                        correctMovies.push_back((*iter).first);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+
+    vector<pair<double, string>> average = averageReviewSpecificMovies(correctMovies);
+
+    sort(average.begin(), average.end());
+
+    if (average.size() < 10) {
+        for (unsigned int i = 0; i < average.size(); i++) {
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
+        }
+    }
+
+    else {
+        for (unsigned int i = 0; i < 10; i++) {
+            float rating = round(average.at(i).first * 10.0) / 10.0;
+            cout << i + 1 << ". " << average.at(i).second << ", Rating: " << fixed << setprecision(1) << rating << endl;
+        }
+    }
+}
+void bestGenre(string genre);
+void worstGenre(string genre);
+void topOverall();
+void worstOverall();
 
 int main()
 {
