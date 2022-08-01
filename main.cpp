@@ -95,9 +95,9 @@ class Map
 private:
     Node* root;
 
-    void rotateRight(Node *&root, Node *&node);
-    void rotateLeft(Node *&root, Node *&node);
-    void fixViolation(Node *&root, Node *&node);
+    void rotateRight(Node* &root, Node* &node);
+    void rotateLeft(Node* &root, Node* &node);
+    void fixViolation(Node* &root, Node* &node);
 
 public:
     Map()
@@ -121,18 +121,19 @@ Node* BSTinsertion(Node* root, Node* node)
     {
         return node;
     }
+    //Recurse through the left side
+    if (node->movieName < root->movieName)
+    {
+        root->left  = BSTinsertion(root->left, node);
+        root->left->parent = root;
+    }
     //Recurse through the right side
-    if (root->movieName < node->movieName)
+    else if (node->movieName > root->movieName)
     {
         root->right = BSTinsertion(root->right, node);
         root->right->parent = root;
     }
-        //Recurse through the left side
-    else if (node->movieName < root->movieName)
-    {
-        root->left = BSTinsertion(root->left, node);
-        root->left->parent = root;
-    }
+
     return root;
 }
 
@@ -143,15 +144,14 @@ void Map::insertNode(string& movieName, int id, vector<pair<int,float>>& reviews
 
 
     //Normal insertion
-    this->root = BSTinsertion(root, node);
-
+    root = BSTinsertion(root, node);
 
     //If there are any violations of the Red-Black Tree, fix it
     fixViolation(root, node);
 }
 
 //Rotates the tree to the right
-void Map::rotateRight(Node *&root, Node *&node)
+void Map::rotateRight(Node* &root, Node* &node)
 {
     //Variables
     Node* node_left = node->left;
@@ -218,10 +218,14 @@ void Map::fixViolation(Node *&root, Node *&node)
     Node *grandparentNode = nullptr;
 
     //Traverses the tree and does rotations as necessary
-    while (node != root && node->parent->color == RED && node->color != BLACK)
+    while(node != root && node->parent != nullptr && node->parent->color == RED && node->color != BLACK)
     {
+        cout << "Node Color: " << node->color << endl;
+        cout << "Node Name: " << node->movieName << endl;
         parentNode = node->parent;
         grandparentNode = node->parent->parent;
+
+        cout << "Parent: " << parentNode->movieName << endl;
 
         //Case I: Parent of node is the left child of Grandparent node
         if (parentNode == grandparentNode->left)
@@ -246,7 +250,6 @@ void Map::fixViolation(Node *&root, Node *&node)
                 {
                     //Rotate tree to the left
                     rotateLeft(root, parentNode);
-
                     //Re-assign what nodes point to
                     node = parentNode;
                     parentNode = node->parent;
@@ -262,7 +265,7 @@ void Map::fixViolation(Node *&root, Node *&node)
                 node = parentNode;
             }
         }
-            //Case II: Parent of node is the right child of Grandparent node
+        //Case II: Parent of node is the right child of Grandparent node
         else
         {
             Node *uncleNode = grandparentNode->left;
@@ -301,6 +304,7 @@ void Map::fixViolation(Node *&root, Node *&node)
                 node = parentNode;
             }
         }
+        cout << "ParentNodeColor: " << parentNode->color << endl;
     }
     //Root is always BLACK
     root->color = BLACK;
@@ -361,8 +365,9 @@ vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
             //reviews.emplace_back(make_pair(movieID, reviews[count].second.emplace_back(make_pair(userID,rating))));
 //            userReviews = make_pair(movieID, userReviews.second[count].push_back(make_pair(userID,rating)));
 
-            if (visited.find(movieID) != visited.end()) {
-                        reviews.at(visited[movieID]).second.push_back(make_pair(userID, rating));
+            if (visited.find(movieID) != visited.end())
+            {
+                reviews.at(visited[movieID]).second.emplace_back(make_pair(userID, rating));
             }
 //            bool movieIDFound = false;
 //            if (reviews.size() != 0 && movieID <= reviews.at(reviews.size() - 1).first) {
@@ -374,7 +379,8 @@ vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
 //                    }
 //                }
 //            }
-            else {
+            else
+            {
                 vector<pair<int, float>> temp;
                 temp.push_back(make_pair(userID, rating));
                 reviews.push_back(make_pair(movieID, temp));
