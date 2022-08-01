@@ -810,7 +810,7 @@ int main() {
     auto duration = (stop - start);
     auto time = chrono::duration_cast<chrono::seconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "Building the min-heap took " << time.count() << " seconds!" << endl;
 
 //    heap.printHeap();
 
