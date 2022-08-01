@@ -208,9 +208,9 @@ void minHeap::goodMovieReview(string movie) {
     // stop timer and print duration of function
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 
 }
 
@@ -336,9 +336,9 @@ void minHeap::badMovieReview(string movie) {
     // stop timer and print duration of function
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 
 }
 
@@ -476,9 +476,9 @@ void minHeap::goodMovieGenre(string movie) {
     // stop the timer and print the duration of the function
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 // function to find low rated movies in the same genre as a user input movie
@@ -548,9 +548,9 @@ void minHeap::badMovieGenre(string movie) {
     // stop the timer and print the duration for this function
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 // function to print highest rated movies in a specific genre
@@ -612,9 +612,9 @@ void minHeap::bestGenre(string genre) {
     // stop the timer and print the duration of the function
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 // function to print lowest rated movies in certain genre
@@ -669,9 +669,9 @@ void minHeap::worstGenre(string genre) {
     // stop the timer and print the duration of the function
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 
 }
 
@@ -696,9 +696,9 @@ void minHeap::topOverall() {
     // stop the timer and print the duration
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 // print the 10 worst rated movies across all genres
@@ -722,14 +722,16 @@ void minHeap::worstOverall() {
     // stop the timer and print the duration of the function
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 
 }
 
 
 int main() {
+
+    auto start = chrono::high_resolution_clock:now();
 
     ifstream movieFile;
     movieFile.open("movies.csv");
@@ -763,6 +765,7 @@ int main() {
         userReviews.push_back(make_pair(userID, make_pair(tempMovieID, rating)));
 
     }
+
     for (unsigned int i = 0; i < 58098; i++) {
         Node* temp = new Node;
         getline(movieFile, temp->id, ',');
@@ -802,7 +805,13 @@ int main() {
     }
 
     heap.updateUserReviews(userReviews);
-    
+
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = (stop - start);
+    auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+    cout << "This process took " << time.count() << " seconds!" << endl;
+
 //    heap.printHeap();
 
 //    heap.printInOrder(0);
@@ -813,8 +822,8 @@ int main() {
 //
 //    heap.goodMovieGenre("Toy Story (1995)");
 //    cout << endl;
-    heap.badMovieGenre("Toy Story (1995)");
-    cout << endl;
+//    heap.badMovieGenre("Toy Story (1995)");
+//    cout << endl;
 //
 //    heap.topOverall();
 //    cout << endl;
@@ -823,7 +832,7 @@ int main() {
 //
 //    heap.bestGenre("Comedy");
 //    cout << endl;
-    heap.worstGenre("Comedy");
-    cout << endl;
+//    heap.worstGenre("Comedy");
+//    cout << endl;
     return 0;
 }
