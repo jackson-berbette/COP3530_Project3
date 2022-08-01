@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <unordered_map>
 
 using namespace std;
 
@@ -137,6 +138,7 @@ Node* BSTinsertion(Node* root, Node* node)
 
 void Map::insertNode(string& movieName, int id, vector<pair<int,float>>& reviews, vector<string>& genres)
 {
+
     Node* node = new Node(movieName, id,reviews,genres);
 
 
@@ -325,6 +327,7 @@ vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
     //Variables
     vector<pair<int, vector<pair<int, float>>>> reviews;
     pair<int, vector<pair<int,float>>> userReviews;
+    unordered_map<int, int> visited;
 
     ifstream inFile(fileName);
 
@@ -357,23 +360,30 @@ vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
 
             //reviews.emplace_back(make_pair(movieID, reviews[count].second.emplace_back(make_pair(userID,rating))));
 //            userReviews = make_pair(movieID, userReviews.second[count].push_back(make_pair(userID,rating)));
-            bool movieIDFound = false;
-            if (reviews.size() == 0 || reviews.at(reviews.size() - 1).first >= movieID) {
-                for (unsigned int j = 0; j < reviews.size(); j++) {
-                    if (reviews.at(j).first == movieID) {
-                        reviews.at(j).second.push_back(make_pair(userID, rating));
-                        movieIDFound = true;
-                        break;
-                    }
-                }
+
+            if (visited.find(movieID) != visited.end()) {
+                        reviews.at(visited[movieID]).second.push_back(make_pair(userID, rating));
             }
-            else if (movieIDFound == false) {
+//            bool movieIDFound = false;
+//            if (reviews.size() != 0 && movieID <= reviews.at(reviews.size() - 1).first) {
+//                for (unsigned int j = 0; j < reviews.size(); j++) {
+//                    if (reviews.at(j).first == movieID) {
+//                        reviews.at(j).second.push_back(make_pair(userID, rating));
+//                        movieIDFound = true;
+//                        break;
+//                    }
+//                }
+//            }
+            else {
                 vector<pair<int, float>> temp;
                 temp.push_back(make_pair(userID, rating));
                 reviews.push_back(make_pair(movieID, temp));
+                visited[movieID] = reviews.size() - 1;
             }
 
-            sort(reviews.begin(), reviews.end());
+//            cout << reviews.size() << endl;
+
+//            sort(reviews.begin(), reviews.end());
 
         }
     }
