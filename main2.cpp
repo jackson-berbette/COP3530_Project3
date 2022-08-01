@@ -332,10 +332,18 @@ void Map::suggestionsBasedOnMovie(string name, vector<Node*>& traversePtrs)
         sort(namesOfMovies.begin(),namesOfMovies.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second > movie2.second;});
 
         //Print out top 10 movies
-        for (int i = 0; i < 10; i++)
-        {
-            float rating = round(namesOfMovies[i].second * 10.0) / 10.0;
-            cout <<  i + 1 << ". " << namesOfMovies[i].first << ", Rating: " << setprecision(1) << rating <<endl;
+        if (namesOfMovies.size() < 10) {
+            for (unsigned int i = 0; i < namesOfMovies.size(); i++) {
+                float rating = round(namesOfMovies[i].second * 10.0) / 10.0;
+                cout <<  i + 1 << ". " << namesOfMovies[i].first << ", Rating: " << fixed << setprecision(1) << rating <<endl;
+            }
+        }
+        else {
+            for (int i = 0; i < 10; i++) {
+                float rating = round(namesOfMovies[i].second * 10.0) / 10.0;
+                cout << i + 1 << ". " << namesOfMovies[i].first << ", Rating: " << fixed << setprecision(1) << rating
+                     << endl;
+            }
         }
 
         //Print the time it took to complete
@@ -400,10 +408,18 @@ void Map::avoidBasedOnMovie(string name, vector<Node*>& traversePtrs)
         sort(namesOfMovies.begin(),namesOfMovies.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second < movie2.second;});
 
         //Print out top 10 movies
-        for (int i = 0; i < 10; i++)
-        {
-            float rating = round(namesOfMovies[i].second * 10.0) / 10.0;
-            cout <<  i + 1 << ". " << namesOfMovies[i].first << ", Rating: " << setprecision(1) << rating <<endl;
+        if (namesOfMovies.size() < 10) {
+            for (unsigned int i = 0; i < namesOfMovies.size(); i++) {
+                float rating = round(namesOfMovies[i].second * 10.0) / 10.0;
+                cout <<  i + 1 << ". " << namesOfMovies[i].first << ", Rating: " << fixed << setprecision(1) << rating <<endl;
+            }
+        }
+        else {
+            for (int i = 0; i < 10; i++) {
+                float rating = round(namesOfMovies[i].second * 10.0) / 10.0;
+                cout << i + 1 << ". " << namesOfMovies[i].first << ", Rating: " << fixed << setprecision(1) << rating
+                     << endl;
+            }
         }
 
         //Print the time it took to complete
@@ -507,10 +523,17 @@ void Map::suggestionsBasedOnGenre(string genre, vector<Node*>& traversePtrs)
     }
 
     //Print out top 10 movies
-    for (int i = 0; i < 10; i++)
-    {
-        float rating = round(moviesList[i].second * 10.0) / 10.0;
-        cout <<  i + 1 << ". " << moviesList[i].first << ", Rating: " << setprecision(1) << rating <<endl;
+    if (moviesList.size() < 10) {
+        for (unsigned int i = 0; i < moviesList.size(); i++) {
+            float rating = round(moviesList[i].second * 10.0) / 10.0;
+            cout <<  i + 1 << ". " << moviesList[i].first << ", Rating: " << fixed << setprecision(1) << rating <<endl;
+        }
+    }
+    else {
+        for (int i = 0; i < 10; i++) {
+            float rating = round(moviesList[i].second * 10.0) / 10.0;
+            cout << i + 1 << ". " << moviesList[i].first << ", Rating: " << fixed << setprecision(1) << rating << endl;
+        }
     }
 
     //Print the time it took to complete
@@ -561,10 +584,17 @@ void Map::avoidBasedOnGenre(string genre, vector<Node *> &traversePtrs)
     }
 
     //Print out top 10 movies
-    for (int i = 0; i < 10; i++)
-    {
-        float rating = round(moviesList[i].second * 10.0) / 10.0;
-        cout <<  i + 1 << ". " << moviesList[i].first << ", Rating: " << setprecision(1) << rating <<endl;
+    if (moviesList.size() < 10) {
+        for (unsigned int i = 0; i < moviesList.size(); i++) {
+            float rating = round(moviesList[i].second * 10.0) / 10.0;
+            cout <<  i + 1 << ". " << moviesList[i].first << ", Rating: " << fixed << setprecision(1) << rating <<endl;
+        }
+    }
+    else {
+        for (int i = 0; i < 10; i++) {
+            float rating = round(moviesList[i].second * 10.0) / 10.0;
+            cout << i + 1 << ". " << moviesList[i].first << ", Rating: " << fixed << setprecision(1) << rating << endl;
+        }
     }
 
     //Print the time it took to complete
@@ -853,7 +883,7 @@ void Map::bestOverallMovies(vector<Node*>& traversePtrs)
     for (int i = 0; i < 10; i++)
     {
         float rating = round(result[i].second * 10.0) / 10.0;
-        cout <<  i + 1 << ". " << result[i].first << ", Rating: " << setprecision(1) << rating <<endl;
+        cout <<  i + 1 << ". " << result[i].first << ", Rating: " << fixed << setprecision(1) << rating <<endl;
     }
 
     //Print out how long it took
@@ -888,7 +918,7 @@ void Map::worstOverallMovies(vector<Node *> &traversePtrs)
     for (int i = 0; i < 10; i++)
     {
         float rating = round(result[i].second * 10.0) / 10.0;
-        cout <<  i + 1 << ". " << result[i].first << ", Rating: " << setprecision(1) << rating <<endl;
+        cout <<  i + 1 << ". " << result[i].first << ", Rating: " << fixed << setprecision(1) << rating <<endl;
     }
 
     //Print out how long it took
