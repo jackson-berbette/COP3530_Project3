@@ -28,7 +28,6 @@ public:
     vector<string> getGenres();
     vector<pair<int,float>> getReviews();
 };
-
 Movie::Movie()
 {
     this->movieName = "";
@@ -43,22 +42,18 @@ Movie::Movie(string movieNme, int movID, vector<string>& genre, vector<pair<int,
     this->genres = genre;
     this->reviews = review;
 }
-
 string Movie::getMovieName()
 {
     return this->movieName;
 }
-
 int Movie::getMovieID()
 {
     return this->movieID;
 }
-
 vector<string> Movie::getGenres()
 {
     return this->genres;
 }
-
 vector<pair<int,float>> Movie::getReviews()
 {
     return this->reviews;
@@ -131,7 +126,7 @@ Node* BSTinsertion(Node* root, Node* node)
         root->right = BSTinsertion(root->right, node);
         root->right->parent = root;
     }
-    //Recurse through the left side
+        //Recurse through the left side
     else if (node->movieName < root->movieName)
     {
         root->left = BSTinsertion(root->left, node);
@@ -144,8 +139,10 @@ void Map::insertNode(string& movieName, int id, vector<pair<int,float>>& reviews
 {
     Node* node = new Node(movieName, id,reviews,genres);
 
+
     //Normal insertion
     this->root = BSTinsertion(root, node);
+
 
     //If there are any violations of the Red-Black Tree, fix it
     fixViolation(root, node);
@@ -328,7 +325,6 @@ vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
     //Variables
     vector<pair<int, vector<pair<int, float>>>> reviews;
     pair<int, vector<pair<int,float>>> userReviews;
-    int count = 0;
 
     ifstream inFile(fileName);
 
@@ -337,8 +333,9 @@ vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
         string lineFromFile;
         getline(inFile, lineFromFile);
 
-        while (getline(inFile, lineFromFile))
+        for (unsigned int i = 0; i < 27753444; i++)
         {
+            getline(inFile, lineFromFile);
             istringstream stream(lineFromFile);
 
             //Variables
@@ -359,9 +356,25 @@ vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
             rating = stof(tempRating);
 
             //reviews.emplace_back(make_pair(movieID, reviews[count].second.emplace_back(make_pair(userID,rating))));
-            userReviews = make_pair(movieID, userReviews.second[count].emplace_back(make_pair(userID,rating)));
+//            userReviews = make_pair(movieID, userReviews.second[count].push_back(make_pair(userID,rating)));
+            bool movieIDFound = false;
+            if (reviews.size() == 0 || reviews.at(reviews.size() - 1).first >= movieID) {
+                for (unsigned int j = 0; j < reviews.size(); j++) {
+                    if (reviews.at(j).first == movieID) {
+                        reviews.at(j).second.push_back(make_pair(userID, rating));
+                        movieIDFound = true;
+                        break;
+                    }
+                }
+            }
+            else if (movieIDFound == false) {
+                vector<pair<int, float>> temp;
+                temp.push_back(make_pair(userID, rating));
+                reviews.push_back(make_pair(movieID, temp));
+            }
 
-            count++;
+            sort(reviews.begin(), reviews.end());
+
         }
     }
     return reviews;
@@ -381,10 +394,11 @@ void readIntoMap(string fileName, Map& map)
         vector<pair<int, vector<pair<int, float>>>> userReviews = getReviewsFromMovie("ratings 2.csv");
 
         //Sort the userReviews based on movieID to be able to access it
-        sort(userReviews.begin(),userReviews.end(), );
+        sort(userReviews.begin(),userReviews.end());
 
-        while (getline(inFile, lineFromFile))
+        for (unsigned int j = 0; j < 58098; j++)
         {
+            getline(inFile, lineFromFile);
             istringstream stream(lineFromFile);
 
             //Variables
@@ -400,8 +414,10 @@ void readIntoMap(string fileName, Map& map)
             movieID = stoi(tempMovieID);
 
 
+
             //Get movie name
             getline(stream, tempMovieName);
+
 
             //Checks if the movie title starts with quotation
             if (tempMovieName.at(0) == '\"')
@@ -434,6 +450,7 @@ void readIntoMap(string fileName, Map& map)
                 tempGenres = tempMovieName.substr(index, tempMovieName.size());
             }
 
+
             //Fills up the Genre vector
             string tempString;
             for (int i = 0; i < tempGenres.size(); i++)
@@ -446,8 +463,9 @@ void readIntoMap(string fileName, Map& map)
                 tempString += tempGenres.at(i);
             }
 
+
             //Insert the node into the map (Red-Black Tree)
-            map.insertNode(movieName,movieID,userReviews[movieID].second,genres);
+            map.insertNode(movieName,movieID,userReviews[count].second,genres);
 
             count++;
         }
