@@ -13,56 +13,6 @@ using namespace std;
 
 enum Color {RED, BLACK};
 
-/*//-----------MOVIE CLASS---------//
-class Movie
-{
-private:
-    string movieName;
-    string movieID;
-    vector<string> genres;
-    vector<pair<int, float>> reviews; //vector<pair<userID,rating>>
-public:
-    Movie();
-    Movie(string movieNme, int movID, vector<string>& genre, vector<pair<int,float>>& review);
-    string getMovieName();
-    int getMovieID();
-    vector<string> getGenres();
-    vector<pair<int,float>> getReviews();
-};
-Movie::Movie()
-{
-    this->movieName = "";
-    this->movieID = 0;
-    this->genres = {};
-    this->reviews = {};
-}
-Movie::Movie(string movieNme, int movID, vector<string>& genre, vector<pair<int, float>>& review)
-{
-    this->movieName = movieNme;
-    this->movieID = movID;
-    this->genres = genre;
-    this->reviews = review;
-}
-string Movie::getMovieName()
-{
-    return this->movieName;
-}
-int Movie::getMovieID()
-{
-    return this->movieID;
-}
-vector<string> Movie::getGenres()
-{
-    return this->genres;
-}
-vector<pair<int,float>> Movie::getReviews()
-{
-    return this->reviews;
-}
-*/
-//---------END OF MOVIE CLASS----------//
-
-
 //-----------------------------START OF MAP IMPLEMENTATION-------------------------------//
 // Class to store movie objects
 struct Node
@@ -105,10 +55,12 @@ public:
         this->root = nullptr;
     }
 
+    Node* getRoot();
     void insertNode(string& movieName, int id, vector<pair<int,float>>& reviews, vector<string>& genres);
-    Node* searchMovie();
-    Node* searchMovieID();
-    //vector<pair<string>> returnSimilarGenres();
+    Node* searchMovie(Node* root, string name);
+    Node* searchMovieID(Node* root, int id);
+    void suggestionsBasedOnMovie(string name, vector<Node*>& traversePtrs); //Option 1
+    void suggestionsBasedOnGenre(string genre, vector<Node*>& traversePtrs); //Options 2
 };
 
 //-------HELPER FUNCTION-----------//
@@ -220,12 +172,8 @@ void Map::fixViolation(Node *&root, Node *&node)
     //Traverses the tree and does rotations as necessary
     while(node != root && node->parent != nullptr && node->parent->color == RED && node->color != BLACK)
     {
-        cout << "Node Color: " << node->color << endl;
-        cout << "Node Name: " << node->movieName << endl;
         parentNode = node->parent;
         grandparentNode = node->parent->parent;
-
-        cout << "Parent: " << parentNode->movieName << endl;
 
         //Case I: Parent of node is the left child of Grandparent node
         if (parentNode == grandparentNode->left)
@@ -304,33 +252,165 @@ void Map::fixViolation(Node *&root, Node *&node)
                 node = parentNode;
             }
         }
-        cout << "ParentNodeColor: " << parentNode->color << endl;
     }
     //Root is always BLACK
     root->color = BLACK;
 }
 
+float calculateAverageRatings(vector<pair<int, float>> reviews)
+{
+    //Variables
+    float result = 0.0;
+
+    for (int i = 0; i < reviews.size(); i++)
+    {
+        result += reviews[i].second;
+    }
+
+    return result / (float)reviews.size();
+}
+
+void Map::suggestionsBasedOnMovie(string name, vector<Node*>& traversePtrs)
+{
+    //Variables
+    Node* movieNode = searchMovie(root, name);
+    vector<pair<string, float>> namesOfMovies;
+    set<pair<string,vector<pair<int,float>>>> similarMovieGenres;
+
+    if (movieNode != nullptr)
+    {
+        //Finds movies with similar genres and add it to a set
+        for (int i = 0; i < movieNode->genres.size(); i++)
+        {
+            for (int j = 0; j < traversePtrs.size(); j++)
+            {
+                if (traversePtrs[j]->movieName != name)
+                {
+                    //Iterates through the reviews of the current Node in traversePtrs
+                    for (int k = 0; k < traversePtrs[j]->genres.size(); k++)
+                    {
+                        if (movieNode->genres[i] == traversePtrs[j]->genres[k] && traversePtrs[j]->reviews.size() > 100)
+                        {
+                            //Puts it in a set so no copies of movies are made
+                            similarMovieGenres.emplace(make_pair(traversePtrs[j]->movieName, traversePtrs[j]->reviews));
+                        }
+                    }
+                }
+            }
+        }
+
+        cout << similarMovieGenres.size() << endl;
+
+        //Transfers from set to a vector that only contains movies that have more than 100 reviews
+        for (auto it = similarMovieGenres.begin(); it != similarMovieGenres.end(); it++)
+        {
+            if (it->second.size() > 100)
+            {
+                namesOfMovies.emplace_back(make_pair(it->first, calculateAverageRatings(it->second)));
+            }
+        }
+
+        sort(namesOfMovies.begin(),namesOfMovies.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second > movie2.second;});
+
+        //Print out top 10 movies
+        for (int i = 0; i < 10; i++)
+        {
+            cout <<  namesOfMovies[i].first << " " << "Rating: " << namesOfMovies[i].second <<endl;
+        }
+    }
+    else
+    {
+        cout << "Invalid Movie! Please enter a valid movie title" << endl;
+        return;
+    }
+}
+
+Node* Map::searchMovie(Node* root, string name)
+{
+    if (root->left == nullptr && root->right == nullptr)
+    {
+        return nullptr;
+    }
+
+    if (root->movieName == name)
+    {
+        return root;
+    }
+    else
+    {
+        if (name < root->movieName)
+        {
+            return searchMovie(root->left, name);
+        }
+        else
+        {
+            return searchMovie(root->right, name);
+        }
+    }
+
+}
+
+Node *Map::getRoot()
+{
+    return this->root;
+}
+
+void Map::suggestionsBasedOnGenre(string genre, vector<Node*>& traversePtrs)
+{
+    //Variables
+    bool genreFound = false;
+    vector<pair<string,float>> moviesList; //pair<movieName, AverageRating>
+
+    for (int i = 0; i < traversePtrs.size(); i++)
+    {
+        for (int k = 0; k < traversePtrs[i]->genres.size(); k++)
+        {
+            if (genre == traversePtrs[i]->genres[k] && traversePtrs[i]->reviews.size() > 100)
+            {
+                genreFound = true;
+                moviesList.emplace_back(make_pair(traversePtrs[i]->movieName, calculateAverageRatings(traversePtrs[i]->reviews)));
+                break;
+            }
+        }
+    }
+
+    if (genreFound)
+    {
+        sort(moviesList.begin(),moviesList.end(), [] (const auto &movie1, const auto &movie2) {return movie1.second > movie2.second;});
+    }
+    else
+    {
+        cout << "Invalid Genre! Please enter a valid genre" << endl;
+        return;
+    }
+
+    //Print out top 10 movies
+    for (int i = 0; i < 10; i++)
+    {
+        cout << " " << moviesList[i].first << " " << "Rating: " << moviesList[i].second << endl;
+    }
+}
+
 //---------------------HELPER FUNCTIONS------------------------//
 
-vector<Node*> getNodes(Node* root,vector<Node*> vectors)
+vector<Node*> getNodes(Node* root,vector<Node*>& vectors)
 {
-    vector<Node*> movieObjects = vectors;
+    vector<Node*> movieNodes = vectors;
 
     if (root != nullptr)
     {
-        movieObjects = getNodes(root->left, movieObjects);
-        movieObjects.push_back(root);
-        movieObjects = getNodes(root->right, movieObjects);
+        movieNodes = getNodes(root->left, movieNodes);
+        movieNodes.push_back(root);
+        movieNodes = getNodes(root->right, movieNodes);
     }
 
-    return movieObjects;
+    return movieNodes;
 }
 
 vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
 {
     //Variables
     vector<pair<int, vector<pair<int, float>>>> reviews;
-    pair<int, vector<pair<int,float>>> userReviews;
     unordered_map<int, int> visited;
 
     ifstream inFile(fileName);
@@ -362,23 +442,10 @@ vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
             getline(stream, tempRating, ',');
             rating = stof(tempRating);
 
-            //reviews.emplace_back(make_pair(movieID, reviews[count].second.emplace_back(make_pair(userID,rating))));
-//            userReviews = make_pair(movieID, userReviews.second[count].push_back(make_pair(userID,rating)));
-
             if (visited.find(movieID) != visited.end())
             {
                 reviews.at(visited[movieID]).second.emplace_back(make_pair(userID, rating));
             }
-//            bool movieIDFound = false;
-//            if (reviews.size() != 0 && movieID <= reviews.at(reviews.size() - 1).first) {
-//                for (unsigned int j = 0; j < reviews.size(); j++) {
-//                    if (reviews.at(j).first == movieID) {
-//                        reviews.at(j).second.push_back(make_pair(userID, rating));
-//                        movieIDFound = true;
-//                        break;
-//                    }
-//                }
-//            }
             else
             {
                 vector<pair<int, float>> temp;
@@ -386,11 +453,6 @@ vector<pair<int, vector<pair<int, float>>>> getReviewsFromMovie(string fileName)
                 reviews.push_back(make_pair(movieID, temp));
                 visited[movieID] = reviews.size() - 1;
             }
-
-//            cout << reviews.size() << endl;
-
-//            sort(reviews.begin(), reviews.end());
-
         }
     }
     return reviews;
@@ -494,8 +556,12 @@ int main()
     //Variables
     Map movieNames;
 
+    //Read in values from the database
     readIntoMap("movies.csv", movieNames);
 
+    //TraversePtrs contains all nodes from the tree
+    vector<Node*> traversePtrs = getNodes(movieNames.getRoot(), traversePtrs);
 
-
+    movieNames.suggestionsBasedOnMovie("Toy Story (1995)", traversePtrs); //Option 1
+    movieNames.suggestionsBasedOnGenre("Comedy", traversePtrs); //Option 2
 }
