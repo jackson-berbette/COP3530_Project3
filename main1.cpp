@@ -559,11 +559,6 @@ void minHeap::bestGenre(string genre) {
     // start the timer for function
     auto start = chrono::high_resolution_clock::now();
 
-//    vector<string> validGenres = {"Action", "Adventure", "Animation", "Children",
-//                                  "Comedy", "Crime", "Drama", "Fantasy", "Horror",
-//                                  "Thriller", "Mystery", "Sci-Fi", "Thriller",
-//                                  "IMAX", "Documentary", "Musical", "Romance",
-//                                  "War", "Western", "Film-Noir"};
 
     // create a vector to store indices of all movies with desired genre
     vector<int> indices;
