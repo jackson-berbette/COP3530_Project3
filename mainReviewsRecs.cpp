@@ -86,7 +86,7 @@ struct Node
         this->left = nullptr;
         this->right = nullptr;
         this->parent = nullptr;
-        this->color = RED;
+        this->color = BLACK;
     }
 };
 
@@ -113,9 +113,19 @@ public:
     void badMovieReview(Node* root, string movie);
     void updateReviewsByUser(vector<pair<int, pair<int, float>>> vec);
     Node* getRoot();
+    void inOrder(Node* root);
     //vector<pair<string>> returnSimilarGenres();
 };
 
+//static int help = 0;
+void Map::inOrder(Node* root) {
+    if (root != nullptr) {
+        inOrder(root->left);
+//        help++;
+//        cout << root->movieName << " " << help << endl;
+        inOrder(root->right);
+    }
+}
 Node* Map::getRoot() {
     return root;
 }
@@ -155,8 +165,39 @@ void Map::insertNode(string& movieName, int id, vector<pair<int,float>>& reviews
     Node* node = new Node(movieName, id,reviews,genres);
 
 
-    //Normal insertion
-    root = BSTinsertion(root, node);
+//    //Normal insertion
+//    root = BSTinsertion(root, node);
+
+    Node* y = nullptr;
+    Node* x = root;
+    while (x != nullptr) {
+        y = x;
+        if (node->movieName < x->movieName) {
+            x = x->left;
+        }
+        else {
+            x = x->right;
+        }
+    }
+
+    node->parent = y;
+    if (y == nullptr) {
+        root = node;
+    }
+    else if (node->movieName < y->movieName) {
+        y->left = node;
+    }
+    else {
+        y->right = node;
+    }
+
+    if (node->parent == nullptr) {
+        node->color = BLACK;
+        return;
+    }
+    if (node->parent->parent == nullptr) {
+        return;
+    }
 
     //If there are any violations of the Red-Black Tree, fix it
     fixViolation(root, node);
@@ -171,7 +212,7 @@ void Map::rotateRight(Node* &root, Node* &node)
 
     if (node->left != nullptr)
     {
-        node->left->parent = node;
+        node_left->right->parent = node;
     }
 
     node_left->parent = node->parent;
@@ -180,13 +221,13 @@ void Map::rotateRight(Node* &root, Node* &node)
     {
         root = node_left;
     }
-    else if (node == node->parent->left)
+    else if (node == node->parent->right)
     {
-        node->parent->left = node_left;
+        node->parent->right = node_left;
     }
     else
     {
-        node->parent->right =node_left;
+        node->parent->left =node_left;
     }
 
     node_left->right = node;
@@ -200,9 +241,9 @@ void Map::rotateLeft(Node *&root, Node *&node)
     Node* node_right = node->right;
     node->right = node_right->left;
 
-    if (node->right != nullptr)
+    if (node_right->left != nullptr)
     {
-        node->right->parent = node;
+        node_right->left->parent = node;
     }
 
     node_right->parent = node->parent;
@@ -226,100 +267,143 @@ void Map::rotateLeft(Node *&root, Node *&node)
 
 void Map::fixViolation(Node *&root, Node *&node)
 {
-    Node *parentNode = nullptr;
-    Node *grandparentNode = nullptr;
 
-    //Traverses the tree and does rotations as necessary
-    while(node != root && node->parent != nullptr && node->parent->color == RED && node->color != BLACK)
-    {
-//        cout << "Node Color: " << node->color << endl;
-//        cout << "Node Name: " << node->movieName << endl;
-        parentNode = node->parent;
-        grandparentNode = node->parent->parent;
-
-//        cout << "Parent: " << parentNode->movieName << endl;
-
-        //Case I: Parent of node is the left child of Grandparent node
-        if (parentNode == grandparentNode->left)
-        {
-            Node* uncleNode = grandparentNode->right;
-
-            //Case 1: If uncle of node is also red, only recoloring is needed
-            if (uncleNode != nullptr && uncleNode->color == RED)
-            {
-                //Recolor the nodes accordingly
-                uncleNode->color = BLACK;
-                grandparentNode->color = RED;
-                parentNode->color = BLACK;
-
-                //Set node equal to grandparent node
-                node = grandparentNode;
-            }
-            else
-            {
-                //Case 2: Node is right child of parent (LEFT RIGHT ROTATION)
-                if (node == parentNode->right)
-                {
-                    //Rotate tree to the left
-                    rotateLeft(root, parentNode);
-                    //Re-assign what nodes point to
-                    node = parentNode;
-                    parentNode = node->parent;
+    cout << "WHAT" << endl;
+    Node* temp;
+        while (node->parent->color == RED) {
+            cout << "HEY" << endl;
+            if (node->parent == node->parent->parent->right) {
+                temp = node->parent->parent->left;
+                if (temp->color == RED) {
+                    temp->color = BLACK;
+                    node->parent->color = BLACK;
+                    node->parent->parent->color = RED;
+                    node = node->parent->parent;
+                } else {
+                    if (node == node->parent->left) {
+                        node = node->parent;
+                        rotateRight(root, node);
+                    }
+                    node->parent->color = BLACK;
+                    node->parent->parent->color = RED;
+                    rotateLeft(root, node->parent->parent);
                 }
-
-                //Case 3: Node is left child of parent (RIGHT ROTATION)
-                rotateRight(root,grandparentNode);
-
-                //Swap the colors of the parent and grandparent nodes
-                swap(parentNode->color,grandparentNode->color);
-
-                //Set node equal to the parent node
-                node = parentNode;
+            } else {
+                temp = node->parent->parent->right;
+                if (temp->color == RED) {
+                    temp->color = BLACK;
+                    node->parent->color = BLACK;
+                    node->parent->parent->color = RED;
+                    node = node->parent->parent;
+                } else {
+                    if (node == node->parent->right) {
+                        node = node->parent;
+                        rotateLeft(root, node);
+                    }
+                    node->parent->color = BLACK;
+                    node->parent->parent->color = RED;
+                    rotateRight(root, node->parent->parent);
+                }
+            }
+            if (node == root) {
+                break;
             }
         }
-            //Case II: Parent of node is the right child of Grandparent node
-        else
-        {
-            Node *uncleNode = grandparentNode->left;
-
-            //Case 1: If uncle of node is also red, only recoloring is needed
-            if (uncleNode != nullptr && uncleNode->color == RED)
-            {
-                //Recolor the nodes accordingly
-                uncleNode->color = BLACK;
-                grandparentNode->color = RED;
-                parentNode->color = BLACK;
-
-                //Set node equal to grandparent node
-                node = grandparentNode;
-            }
-            else
-            {
-                //Case 2: Node is left child of parent (RIGHT LEFT ROTATION)
-                if (node == parentNode->left)
-                {
-                    //Rotate right about the parentNode
-                    rotateRight(root, parentNode);
-
-                    //Reassigns what nodes point to
-                    node = parentNode;
-                    parentNode = node->parent;
-                }
-
-                //Case 3: Node is right child of parent (LEFT ROTATION)
-                rotateLeft(root, grandparentNode);
-
-                //Swap colors of the parent node and grandparent node
-                swap(parentNode->color, grandparentNode->color);
-
-                //Set node equal to parent node
-                node = parentNode;
-            }
-        }
-//        cout << "ParentNodeColor: " << parentNode->color << endl;
-    }
-    //Root is always BLACK
     root->color = BLACK;
+//    Node *parentNode = nullptr;
+//    Node *grandparentNode = nullptr;
+//
+//    //Traverses the tree and does rotations as necessary
+//    while(node != root && node->parent != nullptr && node->parent->color == RED && node->color != BLACK)
+//    {
+////        cout << "Node Color: " << node->color << endl;
+////        cout << "Node Name: " << node->movieName << endl;
+//        parentNode = node->parent;
+//        grandparentNode = node->parent->parent;
+//
+////        cout << "Parent: " << parentNode->movieName << endl;
+//
+//        //Case I: Parent of node is the left child of Grandparent node
+//        if (parentNode == grandparentNode->left)
+//        {
+//            Node* uncleNode = grandparentNode->right;
+//
+//            //Case 1: If uncle of node is also red, only recoloring is needed
+//            if (uncleNode != nullptr && uncleNode->color == RED)
+//            {
+//                //Recolor the nodes accordingly
+//                uncleNode->color = BLACK;
+//                grandparentNode->color = RED;
+//                parentNode->color = BLACK;
+//
+//                //Set node equal to grandparent node
+//                node = grandparentNode;
+//            }
+//            else
+//            {
+//                //Case 2: Node is right child of parent (LEFT RIGHT ROTATION)
+//                if (node == parentNode->right)
+//                {
+//                    //Rotate tree to the left
+//                    rotateLeft(root, parentNode);
+//                    //Re-assign what nodes point to
+//                    node = parentNode;
+//                    parentNode = node->parent;
+//                }
+//
+//                //Case 3: Node is left child of parent (RIGHT ROTATION)
+//                rotateRight(root,grandparentNode);
+//
+//                //Swap the colors of the parent and grandparent nodes
+//                swap(parentNode->color,grandparentNode->color);
+//
+//                //Set node equal to the parent node
+//                node = parentNode;
+//            }
+//        }
+//            //Case II: Parent of node is the right child of Grandparent node
+//        else
+//        {
+//            Node *uncleNode = grandparentNode->left;
+//
+//            //Case 1: If uncle of node is also red, only recoloring is needed
+//            if (uncleNode != nullptr && uncleNode->color == RED)
+//            {
+//                //Recolor the nodes accordingly
+//                uncleNode->color = BLACK;
+//                grandparentNode->color = RED;
+//                parentNode->color = BLACK;
+//
+//                //Set node equal to grandparent node
+//                node = grandparentNode;
+//            }
+//            else
+//            {
+//                //Case 2: Node is left child of parent (RIGHT LEFT ROTATION)
+//                if (node == parentNode->left)
+//                {
+//                    //Rotate right about the parentNode
+//                    rotateRight(root, parentNode);
+//
+//                    //Reassigns what nodes point to
+//                    node = parentNode;
+//                    parentNode = node->parent;
+//                }
+//
+//                //Case 3: Node is right child of parent (LEFT ROTATION)
+//                rotateLeft(root, grandparentNode);
+//
+//                //Swap colors of the parent node and grandparent node
+//                swap(parentNode->color, grandparentNode->color);
+//
+//                //Set node equal to parent node
+//                node = parentNode;
+//            }
+//        }
+////        cout << "ParentNodeColor: " << parentNode->color << endl;
+//    }
+//    //Root is always BLACK
+//    root->color = BLACK;
 }
 
 //---------------------HELPER FUNCTIONS------------------------//
@@ -506,6 +590,7 @@ void readIntoMap(string fileName, Map& map)
         }
         map.updateReviewsByUser(reviewsByUser);
     }
+    map.inOrder(map.getRoot());
 
     map.goodMovieReview(map.getRoot(), "Jumanji (1995)");
 
