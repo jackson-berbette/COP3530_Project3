@@ -8,6 +8,7 @@
 #include <sstream>
 #include <fstream>
 #include <unordered_map>
+#include <chrono>
 
 using namespace std;
 
@@ -104,14 +105,15 @@ Node* BSTinsertion(Node* root, Node* node)
 void Map::insertNode(string& movieName, int id, vector<pair<int,float>>& reviews, vector<string>& genres)
 {
 
+    // create a new node object initialized to necessary values
     Node* node = new Node(movieName, id,reviews,genres);
 
 
-//    //Normal insertion
-//    root = BSTinsertion(root, node);
-
+    // create temporary nodes to help with insertion
     Node* y = nullptr;
     Node* x = root;
+
+    // as long as x isn't nullptr, find its place sequentially in the tree
     while (x != nullptr) {
         y = x;
         if (node->movieName < x->movieName) {
@@ -122,21 +124,28 @@ void Map::insertNode(string& movieName, int id, vector<pair<int,float>>& reviews
         }
     }
 
+    // set y as the node's parent
     node->parent = y;
+
+    // if the node has no parent, it's the root
     if (y == nullptr) {
         root = node;
     }
+    // if the node is less than its parent, move it left
     else if (node->movieName < y->movieName) {
         y->left = node;
     }
+    // otherwise, move it right
     else {
         y->right = node;
     }
 
+    // if the node has no parent, color the node black and don't rotate anything
     if (node->parent == nullptr) {
         node->color = BLACK;
         return;
     }
+    // if the node has no grandparent, don't rotate anything
     if (node->parent->parent == nullptr) {
         return;
     }
@@ -152,26 +161,32 @@ void Map::rotateRight(Node* &root, Node* &node)
     Node* node_left = node->left;
     node->left = node_left->right;
 
+    // if there is a left subtree, fix parent of subtree
     if (node->left != nullptr)
     {
         node_left->right->parent = node;
     }
-
     node_left->parent = node->parent;
 
+    // if the node has no parent, set the root equal to left node
     if (node->parent == nullptr)
     {
         root = node_left;
     }
+
+    // otherwise, if the node is parent's right child, set it equal to the left node
     else if (node == node->parent->right)
     {
         node->parent->right = node_left;
     }
+
+    // otherwise, set left child equal to node's left
     else
     {
-        node->parent->left =node_left;
+        node->parent->left = node_left;
     }
 
+    // set parent and left node's right node
     node_left->right = node;
     node->parent = node_left;
 }
@@ -183,6 +198,7 @@ void Map::rotateLeft(Node *&root, Node *&node)
     Node* node_right = node->right;
     node->right = node_right->left;
 
+    // if there is a right-left child, set right-left's parent equal to node
     if (node_right->left != nullptr)
     {
         node_right->left->parent = node;
@@ -190,64 +206,87 @@ void Map::rotateLeft(Node *&root, Node *&node)
 
     node_right->parent = node->parent;
 
+    // if the node has no parent, the root is the node's right child
     if (node->parent == nullptr)
     {
         root = node_right;
     }
+    // if the node is left child, set left child equal to node's right child
     else if (node->parent->left == node)
     {
         node->parent->left = node_right;
     }
+    // otherwise, set parent's right child equal to node's right child
     else
     {
         node->parent->right = node_right;
     }
 
+    // set node's right-left child and node's parent to correct nodes
     node_right->left = node;
     node->parent = node_right;
 }
 
 void Map::fixViolation(Node *&root, Node *&node)
 {
+    // create a temporary node to track switching nodes
     Node* temp;
+
+    // while the node's parent is red, keep looping
     while (node->parent->color == RED) {
+
+        // if the node's parent is the right child, enter here
         if (node->parent == node->parent->parent->right) {
+            // set temp node equal to grandparent's left child
             temp = node->parent->parent->left;
+
+            // if that node is red, set it equal to black, change parent to black, and grandparent to red
             if (temp->color == RED) {
                 temp->color = BLACK;
                 node->parent->color = BLACK;
                 node->parent->parent->color = RED;
                 node = node->parent->parent;
-            } else {
+            }
+            else {
+                // otherwise, if node is left child, set it equal to its parent and rotate right
                 if (node == node->parent->left) {
                     node = node->parent;
                     rotateRight(root, node);
                 }
+                // set parent equal to black and grandparent equal to red, and rotate left
                 node->parent->color = BLACK;
                 node->parent->parent->color = RED;
                 rotateLeft(root, node->parent->parent);
             }
-        } else {
+        }
+        else {
+            // set node equal to grandparent's right child
             temp = node->parent->parent->right;
+            // if node is red, set equal to black, change parent to black, and set grandparent equal to red
             if (temp->color == RED) {
                 temp->color = BLACK;
                 node->parent->color = BLACK;
                 node->parent->parent->color = RED;
                 node = node->parent->parent;
-            } else {
+            }
+            else {
+                // if node is right child, set it equal to parent and rotate left
                 if (node == node->parent->right) {
                     node = node->parent;
                     rotateLeft(root, node);
                 }
+                // set parent to black, set grandparent to red, nad rotate right on node's grandparent
                 node->parent->color = BLACK;
                 node->parent->parent->color = RED;
                 rotateRight(root, node->parent->parent);
             }
         }
+        // if the node is the root, don't rotate anymore
         if (node == root) {
             break;
         }
     }
+    // root is always black
     root->color = BLACK;
 }
 
@@ -320,9 +359,9 @@ void Map::suggestionsBasedOnMovie(string name, vector<Node*>& traversePtrs)
         //Print the time it took to complete
         auto stop = chrono::high_resolution_clock::now();
         auto duration = (stop - start);
-        auto time = chrono::duration_cast<chrono::seconds>(duration);
+        auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-        cout << "This process took " << time.count() << " seconds!" << endl;
+        cout << "This process took " << time.count() << " milliseconds!" << endl;
     }
     else
     {
@@ -387,9 +426,9 @@ void Map::avoidBasedOnMovie(string name, vector<Node*>& traversePtrs)
         //Print the time it took to complete
         auto stop = chrono::high_resolution_clock::now();
         auto duration = (stop - start);
-        auto time = chrono::duration_cast<chrono::seconds>(duration);
+        auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-        cout << "This process took " << time.count() << " seconds!" << endl;
+        cout << "This process took " << time.count() << " milliseconds!" << endl;
     }
     else
     {
@@ -480,9 +519,9 @@ void Map::suggestionsBasedOnGenre(string genre, vector<Node*>& traversePtrs)
     //Print the time it took to complete
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 void Map::updateReviewsByUser(vector<pair<int, pair<int, float>>> vec)
@@ -531,9 +570,9 @@ void Map::avoidBasedOnGenre(string genre, vector<Node *> &traversePtrs)
     //Print the time it took to complete
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 void Map::suggestionsBasedOnReviews(Node *root, string movie)
@@ -624,9 +663,9 @@ void Map::suggestionsBasedOnReviews(Node *root, string movie)
     //Print out how long it took
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 void Map::avoidBasedOnReview(Node *root, string movie)
@@ -721,9 +760,9 @@ void Map::avoidBasedOnReview(Node *root, string movie)
     //Print out how long it took
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 void Map::bestOverallMovies(vector<Node*>& traversePtrs)
@@ -753,9 +792,9 @@ void Map::bestOverallMovies(vector<Node*>& traversePtrs)
     //Print out how long it took
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 void Map::worstOverallMovies(vector<Node *> &traversePtrs)
@@ -785,9 +824,9 @@ void Map::worstOverallMovies(vector<Node *> &traversePtrs)
     //Print out how long it took
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
-    auto time = chrono::duration_cast<chrono::seconds>(duration);
+    auto time = chrono::duration_cast<chrono::milliseconds>(duration);
 
-    cout << "This process took " << time.count() << " seconds!" << endl;
+    cout << "This process took " << time.count() << " milliseconds!" << endl;
 }
 
 
@@ -955,6 +994,7 @@ void readIntoMap(string fileName, Map& map)
             //Insert the node into the map (Red-Black Tree)
             map.insertNode(movieName, movieID, temporaryVec, genres);
         }
+        map.updateReviewsByUser(reviewsByUser);
     }
 }
 
@@ -964,16 +1004,24 @@ int main()
     //Variables
     Map movieNames;
 
+
     //Read in values from the database
+    auto start = chrono::high_resolution_clock::now();
     readIntoMap("movies.csv", movieNames);
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = (stop - start);
+    auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+    cout << "This process took " << time.count() << " seconds!" << endl;
 
     //TraversePtrs contains all nodes from the tree
     vector<Node*> traversePtrs = getNodes(movieNames.getRoot(), traversePtrs);
 
+
     //------------METHOD CALLS------------//
     //movieNames.suggestionsBasedOnMovie("Toy Story (1995)", traversePtrs); //Option 1
     //movieNames.suggestionsBasedOnGenre("Comedy", traversePtrs); //Option 2
-    //movieNames.suggestionsBasedOnReviews(movieNames.getRoot(), "Toy Story (1995)"); //Option 3
+//    movieNames.suggestionsBasedOnReviews(movieNames.getRoot(), "Toy Story (1995)"); //Option 3
     //movieNames.bestOverallMovies(traversePtrs); //Option 4
     //movieNames.avoidBasedOnMovie("Toy Story (1995)", traversePtrs); //Option 5
     //movieNames.avoidBasedOnGenre("Comedy", traversePtrs); //Option 6
