@@ -115,6 +115,7 @@ void minHeap::goodMovieReview(string movie) {
     }
 
 
+
     // sort the reviews from highest to lowest
     sort(highReviews.begin(), highReviews.end(), greater<>());
 
@@ -147,6 +148,7 @@ void minHeap::goodMovieReview(string movie) {
         }
     }
 
+
     // create a temporary map for easy access
     map<string, vector<float>> averageReviewsTemp;
 
@@ -155,36 +157,38 @@ void minHeap::goodMovieReview(string movie) {
         averageReviewsTemp[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
     }
 
-    map <float, string, greater<>> averageReviews;
+//    map <float, string, greater<>> averageReviews;
+    vector<pair<float, string>> averages;
 
     map<string, vector<float>>::iterator iterTemp;
 
     // iterate through the map created above and add up all the reviews for each movie, dividing them by the total number of reviews to get an average
     for (iterTemp = averageReviewsTemp.begin(); iterTemp != averageReviewsTemp.end(); iterTemp++) {
         float total = 0;
-        for (unsigned int r = 0; r < (*iterTemp).second.size(); r++) {
-            total += (*iterTemp).second.at(r);
-        }
+        if ((*iterTemp).second.size() > 10) {
+            for (unsigned int r = 0; r < (*iterTemp).second.size(); r++) {
+                total += (*iterTemp).second.at(r);
+            }
 
-        // store average movie reviews in a map
-        averageReviews[(total/(float) (*iterTemp).second.size())] = (*iterTemp).first;
+            // store average movie reviews in a map
+            averages.push_back(make_pair(((total) / (float) (*iterTemp).second.size()), (*iterTemp).first));
+        }
     }
 
     // iterate through this final map and find the movie titles associated with each review, and print the top 10
-    map<float, string, greater<>>::iterator iter = averageReviews.begin();
+//    map<float, string, greater<>>::iterator iter = averageReviews.begin();
+    sort(averages.begin(), averages.end(), greater<>());
 
     // if there are less than 10 movies, print them all out
-    if (averageReviews.size() < 10) {
-        int i = 0;
-        for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++) {
+    if (averages.size() < 10) {
+        for (unsigned int i = 0; i < averages.size(); i++) {
             for (unsigned int w = 0; w < size; w++) {
-                if (array[w].id == (*iter).second) {
-                    float rating = round((*iter).first * 10.0) / 10.0;
+                if (array[w].id == (averages.at(i)).second) {
+                    float rating = round((averages.at(i)).first * 10.0) / 10.0;
                     cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
                     break;
                 }
             }
-            i++;
         }
     }
 
@@ -192,13 +196,12 @@ void minHeap::goodMovieReview(string movie) {
     else {
         for (unsigned int i = 0; i < 10; i++) {
             for (unsigned int w = 0; w < size; w++) {
-                if (array[w].id == (*iter).second) {
-                    float rating = round((*iter).first * 10.0) / 10.0;
+                if (array[w].id == (averages.at(i)).second) {
+                    float rating = round((averages.at(i)).first * 10.0) / 10.0;
                     cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
                     break;
                 }
             }
-            iter++;
         }
     }
 
@@ -216,7 +219,7 @@ void minHeap::badMovieReview(string movie) {
     // start timer
     auto start = chrono::high_resolution_clock::now();
 
-    // find the index of the movie from user input
+    // find the index of movie from user input
     int index = -1;
     for (unsigned int i = 0; i < size; i++) {
         if (array[i].name == movie) {
@@ -225,13 +228,13 @@ void minHeap::badMovieReview(string movie) {
         }
     }
 
-    // if movie was not found, print error message
+    // if movie is not valid, send error message
     if (index == -1) {
         cout << "Invalid Movie! Please enter a valid movie title" << endl;
         return;
     }
 
-    // create a vector to store the lowest reviews
+    // initialize vector of low reviews
     vector<pair<float, int>> lowReviews;
 
     // for all reviews of user input movie, find the ones less than or equal to 2.0
@@ -241,24 +244,27 @@ void minHeap::badMovieReview(string movie) {
         }
     }
 
+
+
     // sort the reviews from lowest to highest
     sort(lowReviews.begin(), lowReviews.end());
 
+    // intialize a temporary vector
     vector<pair<float, int>> temp;
 
-    // if there are more than 100 reviews, pick the 100 lowest ones
+    // if there are more than 100 reviews less than or equal to 2.0, only keep the first 100
     if (lowReviews.size() > 100) {
         for (unsigned int q = 0; q < 100; q++) {
             temp.push_back(make_pair(lowReviews.at(q).first, lowReviews.at(q).second));
         }
 
-        // put 100 lowest back into original vector
+        // put these 100 values back into the vector
         lowReviews.clear();
         lowReviews = temp;
         temp.clear();
     }
 
-    // create a vector to store the reviews by each user associated with the movie titles
+    // create a vector to store the reviews by each user associated with movie titles
     vector<pair<string, float>> reviewsByTitle;
 
     // for every userID in lowReviews
@@ -272,62 +278,63 @@ void minHeap::badMovieReview(string movie) {
         }
     }
 
+
     // create a temporary map for easy access
     map<string, vector<float>> averageReviewsTemp;
 
-    // for each of the reviews in the above vector, push them into the map to store all the reviews for each movie in individual vectors
+    // for each of the reviews in the above vector, push them into the map to store all the review values for each movie in individual vectors
     for (unsigned int m = 0; m < reviewsByTitle.size(); m++) {
         averageReviewsTemp[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
     }
 
-    // create a second map to store the average values
-    map <float, string> averageReviews;
+//    map <float, string, greater<>> averageReviews;
+    vector<pair<float, string>> averages;
 
     map<string, vector<float>>::iterator iterTemp;
 
-    // iterate through the map above and add up all review values for each movie, dividing them by the number of reviews to get an average
+    // iterate through the map created above and add up all the reviews for each movie, dividing them by the total number of reviews to get an average
     for (iterTemp = averageReviewsTemp.begin(); iterTemp != averageReviewsTemp.end(); iterTemp++) {
         float total = 0;
-        for (unsigned int r = 0; r < (*iterTemp).second.size(); r++) {
-            total += (*iterTemp).second.at(r);
+        if ((*iterTemp).second.size() > 10) {
+            for (unsigned int r = 0; r < (*iterTemp).second.size(); r++) {
+                total += (*iterTemp).second.at(r);
+            }
+            // store average movie reviews in a map
+            averages.push_back(make_pair(((total) / (float) (*iterTemp).second.size()), (*iterTemp).first));
         }
-
-        // store the average review in map
-        averageReviews[(total/(float) (*iterTemp).second.size())] = (*iterTemp).first;
     }
 
-    // iterate through this map to print lowest average reviewed movies
-    map<float, string>::iterator iter = averageReviews.begin();
+    // iterate through this final map and find the movie titles associated with each review, and print the top 10
+//    map<float, string, greater<>>::iterator iter = averageReviews.begin();
+    sort(averages.begin(), averages.end());
 
-    // if the number of movies is less than 10, print them all
-    if (averageReviews.size() < 10) {
-        int i = 0;
-        for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++) {
+    // if there are less than 10 movies, print them all out
+    if (averages.size() < 10) {
+        for (unsigned int i = 0; i < averages.size(); i++) {
             for (unsigned int w = 0; w < size; w++) {
-                if (array[w].id == (*iter).second) {
-                    float rating = round((*iter).first * 10.0) / 10.0;
+                if (array[w].id == (averages.at(i)).second) {
+                    float rating = round((averages.at(i)).first * 10.0) / 10.0;
                     cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
                     break;
                 }
             }
-            i++;
         }
     }
 
-    // otherwise, print the lowest 10 reviewed movies
+        // otherwise, print 10 with highest reviews
     else {
         for (unsigned int i = 0; i < 10; i++) {
             for (unsigned int w = 0; w < size; w++) {
-                if (array[w].id == (*iter).second) {
-                    float rating = round((*iter).first * 10.0) / 10.0;
+                if (array[w].id == (averages.at(i)).second) {
+                    float rating = round((averages.at(i)).first * 10.0) / 10.0;
                     cout << i + 1 << ". " << array[w].name << ", Rating: " << fixed << setprecision(1) << rating << endl;
+                    break;
                 }
             }
-            iter++;
         }
     }
 
-    // stop the timer and print duration
+    // stop timer and print duration of function
     auto stop = chrono::high_resolution_clock::now();
     auto duration = (stop - start);
     auto time = chrono::duration_cast<chrono::seconds>(duration);
@@ -749,6 +756,7 @@ int main() {
         int movieID = stoi(tempMovieID);
         float rating = stof(tempRating);
 
+
         tempReviews[movieID].push_back(make_pair(userID, rating));
         userReviews.push_back(make_pair(userID, make_pair(tempMovieID, rating)));
 
@@ -796,24 +804,24 @@ int main() {
 //    heap.printHeap();
 
 //    heap.printInOrder(0);
-    heap.goodMovieReview("Toy Story (1995)");
+    heap.goodMovieReview("Jumanji (1995)");
     cout << endl;
-    heap.badMovieReview("Toy Story (1995)");
-    cout << endl;
-
-    heap.goodMovieGenre("Toy Story (1995)");
-    cout << endl;
-    heap.badMovieGenre("Toy Story (1995)");
-    cout << endl;
-
-    heap.topOverall();
-    cout << endl;
-    heap.worstOverall();
-    cout << endl;
-
-    heap.bestGenre("Comedy");
-    cout << endl;
-    heap.worstGenre("Comedy");
+//    heap.badMovieReview("Toy Story (1995)");
+//    cout << endl;
+//
+//    heap.goodMovieGenre("Toy Story (1995)");
+//    cout << endl;
+//    heap.badMovieGenre("Toy Story (1995)");
+//    cout << endl;
+//
+//    heap.topOverall();
+//    cout << endl;
+//    heap.worstOverall();
+//    cout << endl;
+//
+//    heap.bestGenre("Comedy");
+//    cout << endl;
+//    heap.worstGenre("Comedy");
     cout << endl;
     return 0;
 }
