@@ -98,6 +98,7 @@ void minHeap::goodMovieReview(string movie) {
         }
     }
 
+
     // if movie is not valid, send error message
     if (index == -1) {
         cout << "Invalid Movie! Please enter a valid movie title" << endl;
@@ -432,6 +433,7 @@ void minHeap::goodMovieGenre(string movie) {
     // create a vector for movies with at least one genre in common with the original movie
     vector<int> correctGenreIndices;
 
+
     // for every movie in the database
     for (unsigned int i = 0; i < size; i++) {
         // if the movie is not the one the user typed in
@@ -449,6 +451,7 @@ void minHeap::goodMovieGenre(string movie) {
             }
         }
     }
+
 
     // create a vector to store average reviews for each of these movies
     vector<pair<double, string>> average = averageReviewSpecificMovies(correctGenreIndices);
@@ -572,12 +575,13 @@ void minHeap::bestGenre(string genre) {
         // for all of the genres listed for the current movie
         for (unsigned int j = 0; j < array[i].genres.size(); j++) {
             // if one of its genres matched the desired genre, push its index into the vector
-            if (array[i].genres.at(j) == genre) {
+            if (array[i].genres.at(j).find(genre) != string::npos) {
                 indices.push_back(i);
                 break;
             }
         }
     }
+
 
     // if the genre was not found, print error message
     if (indices.size() == 0) {
@@ -629,7 +633,7 @@ void minHeap::worstGenre(string genre) {
         // for every genre of the current movie
         for (unsigned int j = 0; j < array[i].genres.size(); j++) {
             // if one of the genres is the desired genre, push that movie's index into the vector
-            if (array[i].genres.at(j) == genre) {
+            if (array[i].genres.at(j).find(genre) != string::npos) {
                 indices.push_back(i);
                 break;
             }
@@ -804,15 +808,15 @@ int main() {
 //    heap.printHeap();
 
 //    heap.printInOrder(0);
-    heap.goodMovieReview("Jumanji (1995)");
-    cout << endl;
+//    heap.goodMovieReview("Jumanji (1995)");
+//    cout << endl;
 //    heap.badMovieReview("Toy Story (1995)");
 //    cout << endl;
 //
 //    heap.goodMovieGenre("Toy Story (1995)");
 //    cout << endl;
-//    heap.badMovieGenre("Toy Story (1995)");
-//    cout << endl;
+    heap.badMovieGenre("Toy Story (1995)");
+    cout << endl;
 //
 //    heap.topOverall();
 //    cout << endl;
@@ -821,7 +825,7 @@ int main() {
 //
 //    heap.bestGenre("Comedy");
 //    cout << endl;
-//    heap.worstGenre("Comedy");
+    heap.worstGenre("Comedy");
     cout << endl;
     return 0;
 }
