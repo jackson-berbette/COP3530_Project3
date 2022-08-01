@@ -65,6 +65,8 @@ public:
     void suggestionsBasedOnGenre(string genre, vector<Node*>& traversePtrs); //Option 2
     void avoidBasedOnMovie(string name, vector<Node*>& traversePtrs); //Option 5 (Inverse of 1)
     void avoidBasedOnGenre(string genre, vector<Node*>& traversePtrs); //Option 6 (Inverse of 2)
+    void goodMovieReview(Node* root, string movie);
+    void badMovieReview(Node* root, string movie);
 };
 
 //-------HELPER FUNCTION-----------//
@@ -486,6 +488,189 @@ void Map::avoidBasedOnGenre(string genre, vector<Node *> &traversePtrs)
     {
         cout <<  i + 1 << ". " << moviesList[i].first << ", Rating: " << setprecision(1) << moviesList[i].second <<endl;
     }
+}
+
+void Map::goodMovieReview(Node* root, string movie) {
+    auto start = chrono::high_resolution_clock::now();
+    Node* temp = searchMovie(root, movie);
+    if (temp == nullptr) {
+        cout << "Invalid Movie! Please enter a valid movie title" << endl;
+        return;
+    }
+
+    vector<pair<float, int>> highReviews;
+
+    for (unsigned int i = 0; i < temp->reviews.size(); i++) {
+        if (temp->reviews.at(i).second >= 4.0) {
+            highReviews.push_back(make_pair(temp->reviews.at(i).second, temp->reviews.at(i).first));
+        }
+    }
+
+
+    sort(highReviews.begin(), highReviews.end(), greater<>());
+
+    vector<pair<float, int>> temporary;
+
+    if (highReviews.size() > 100) {
+        for (unsigned int k = 0; k < 100; k++) {
+            temporary.push_back(make_pair(highReviews.at(k).first, highReviews.at(k).second));
+        }
+        highReviews.clear();
+        highReviews = temporary;
+        temporary.clear();
+    }
+
+    vector<pair<int, float>> reviewsByTitle;
+
+    for (unsigned int h = 0; h < highReviews.size(); h++) {
+        for (unsigned int l = 0; l < reviewsByUser.size(); l++) {
+            if (reviewsByUser.at(l).first == highReviews.at(h).second && reviewsByUser.at(l).second.first != temp->id && reviewsByUser.at(l).second.second >= 4.0) {
+                reviewsByTitle.push_back(make_pair(reviewsByUser.at(l).second.first, reviewsByUser.at(l).second.second));
+            }
+        }
+    }
+
+
+    unordered_map<int, vector<float>> averageReviews;
+
+    for (unsigned int m = 0; m < reviewsByTitle.size(); m++) {
+        averageReviews[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
+    }
+
+    vector<pair<float, int>> averages;
+
+    unordered_map<int, vector<float>>::iterator iter;
+    for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++) {
+        float total = 0;
+        if ((*iter).second.size() > 10) {
+            for (unsigned int r = 0; r < (*iter).second.size(); r++) {
+                total += (*iter).second.at(r);
+            }
+            averages.push_back(make_pair(((total) / (float) (*iter).second.size()), (*iter).first));
+        }
+    }
+
+    sort(averages.begin(), averages.end(), greater<>());
+
+    if (averages.size() < 10) {
+        for (unsigned int p = 0; p < averages.size(); p++) {
+            Node* tempID = searchMovieID(root, averages.at(p).second);
+            if (tempID != nullptr) {
+                float rate = round(averages.at(p).first * 10.0) / 10.0;
+                cout << p + 1 << ". " << tempID->movieName << ", Rating: " << fixed << setprecision(1) << rate << endl;
+            }
+        }
+    }
+
+    else {
+        for (unsigned int p = 0; p < 10; p++) {
+            Node* tempID = searchMovieID(root, averages.at(p).second);
+            if (tempID != nullptr) {
+                float rate = round(averages.at(p).first * 10.0) / 10.0;
+                cout << p + 1 << ". " << tempID->movieName << ", Rating: " << fixed << setprecision(1) << rate << endl;
+            }
+        }
+    }
+
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = (stop - start);
+    auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+    cout << "This process took " << time.count() << " seconds!" << endl;
+
+}
+
+void Map::badMovieReview(Node* root, string movie) {
+    auto start = chrono::high_resolution_clock::now();
+    Node* temp = searchMovie(root, movie);
+    if (temp == nullptr) {
+        cout << "Invalid Movie! Please enter a valid movie title" << endl;
+        return;
+    }
+
+    vector<pair<float, int>> lowReviews;
+
+    for (unsigned int i = 0; i < temp->reviews.size(); i++) {
+        if (temp->reviews.at(i).second <= 2.0) {
+            lowReviews.push_back(make_pair(temp->reviews.at(i).second, temp->reviews.at(i).first));
+        }
+    }
+
+
+    sort(lowReviews.begin(), lowReviews.end());
+
+    vector<pair<float, int>> temporary;
+
+    if (lowReviews.size() > 100) {
+        for (unsigned int k = 0; k < 100; k++) {
+            temporary.push_back(make_pair(lowReviews.at(k).first, lowReviews.at(k).second));
+        }
+        lowReviews.clear();
+        lowReviews = temporary;
+        temporary.clear();
+    }
+
+    vector<pair<int, float>> reviewsByTitle;
+
+    for (unsigned int h = 0; h < lowReviews.size(); h++) {
+        for (unsigned int l = 0; l < reviewsByUser.size(); l++) {
+            if (reviewsByUser.at(l).first == lowReviews.at(h).second && reviewsByUser.at(l).second.first != temp->id && reviewsByUser.at(l).second.second <= 2.0) {
+                reviewsByTitle.push_back(make_pair(reviewsByUser.at(l).second.first, reviewsByUser.at(l).second.second));
+            }
+        }
+    }
+
+
+    unordered_map<int, vector<float>> averageReviews;
+
+    for (unsigned int m = 0; m < reviewsByTitle.size(); m++) {
+        averageReviews[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
+    }
+
+    vector<pair<float, int>> averages;
+
+    unordered_map<int, vector<float>>::iterator iter;
+    for (iter = averageReviews.begin(); iter != averageReviews.end(); iter++) {
+        float total = 0;
+        if ((*iter).second.size() > 10) {
+            for (unsigned int r = 0; r < (*iter).second.size(); r++) {
+                total += (*iter).second.at(r);
+            }
+            averages.push_back(make_pair(((total) / (float) (*iter).second.size()), (*iter).first));
+        }
+    }
+
+    sort(averages.begin(), averages.end());
+
+    vector<pair<float, string>> averageMovies;
+    for (unsigned int e = 0; e < averages.size(); e++) {
+        Node* tempID = searchMovieID(root, averages.at(e).second);
+        if (tempID != nullptr) {
+            averageMovies.push_back(make_pair(averages.at(e).first, tempID->movieName));
+        }
+    }
+
+    sort(averageMovies.begin(), averageMovies.end());
+
+    if (averageMovies.size() < 10) {
+        for (unsigned int p = 0; p < averageMovies.size(); p++) {
+                float rate = round(averages.at(p).first * 10.0) / 10.0;
+                cout << p + 1 << ". " << averageMovies.at(p).second << ", Rating: " << fixed << setprecision(1) << rate << endl;
+        }
+    }
+
+    else {
+        for (unsigned int p = 0; p < 10; p++) {
+                float rate = round(averages.at(p).first * 10.0) / 10.0;
+                cout << p + 1 << ". " << averageMovies.at(p).second << ", Rating: " << fixed << setprecision(1) << rate << endl;
+        }
+    }
+
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = (stop - start);
+    auto time = chrono::duration_cast<chrono::seconds>(duration);
+
+    cout << "This process took " << time.count() << " seconds!" << endl;
 }
 
 
