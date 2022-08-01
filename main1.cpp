@@ -69,7 +69,7 @@ void minHeap::insertNode(Node* node) {
     int i = size - 1;
     array[i] = *node;
 
-    // movie node into right place in min heap by swapping if parent is larger
+    // move node into right place in min heap by swapping if parent is larger
     while (i != 0 && array[getParent(i)].name > array[i].name) {
         Node temp = array[getParent(i)];
         array[getParent(i)] = array[i];
@@ -158,7 +158,7 @@ void minHeap::goodMovieReview(string movie) {
         averageReviewsTemp[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
     }
 
-//    map <float, string, greater<>> averageReviews;
+    // create a vector for averages
     vector<pair<float, string>> averages;
 
     map<string, vector<float>>::iterator iterTemp;
@@ -171,13 +171,12 @@ void minHeap::goodMovieReview(string movie) {
                 total += (*iterTemp).second.at(r);
             }
 
-            // store average movie reviews in a map
+            // store average movie reviews in a vector
             averages.push_back(make_pair(((total) / (float) (*iterTemp).second.size()), (*iterTemp).first));
         }
     }
 
-    // iterate through this final map and find the movie titles associated with each review, and print the top 10
-//    map<float, string, greater<>>::iterator iter = averageReviews.begin();
+    // iterate through this final vector and find the movie titles associated with each review, and print the top 10
     sort(averages.begin(), averages.end(), greater<>());
 
     // if there are less than 10 movies, print them all out
@@ -288,7 +287,7 @@ void minHeap::badMovieReview(string movie) {
         averageReviewsTemp[reviewsByTitle.at(m).first].push_back(reviewsByTitle.at(m).second);
     }
 
-//    map <float, string, greater<>> averageReviews;
+    // create a vector to store averages
     vector<pair<float, string>> averages;
 
     map<string, vector<float>>::iterator iterTemp;
@@ -300,13 +299,12 @@ void minHeap::badMovieReview(string movie) {
             for (unsigned int r = 0; r < (*iterTemp).second.size(); r++) {
                 total += (*iterTemp).second.at(r);
             }
-            // store average movie reviews in a map
+            // store average movie reviews in a vector
             averages.push_back(make_pair(((total) / (float) (*iterTemp).second.size()), (*iterTemp).first));
         }
     }
 
-    // iterate through this final map and find the movie titles associated with each review, and print the top 10
-//    map<float, string, greater<>>::iterator iter = averageReviews.begin();
+    // iterate through this final vector and find the movie titles associated with each review, and print the top 10
     sort(averages.begin(), averages.end());
 
     // if there are less than 10 movies, print them all out
